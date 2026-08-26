@@ -1,0 +1,267 @@
+<div class="view-section">
+  <div class="data-table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-title-group">
+        <div class="title-with-badge">
+          <h3 class="toolbar-title">Company Master Directory</h3>
+          <span class="active-count-badge">{{ filteredCompanies.length }}</span>
+        </div>
+
+        <button type="button" class="top-add-btn" (click)="openAddCompany()">
+          <i class="ri-add-line"></i>
+          <span>Add Company</span>
+        </button>
+      </div>
+
+      <div class="toolbar-actions-grid">
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+          <input type="text" placeholder="Search Company, Person, City, GST..." [(ngModel)]="searchQuery" />
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-scroll-container desktop-table-view">
+      <table class="earthx-table exact-theme-table">
+        <thead>
+          <tr>
+            <th style="width: 70px;">ID</th>
+            <th>Company Name</th>
+            <th>Contact Person</th>
+            <th>Phone / Mobile</th>
+            <th>City / Region</th>
+            <th>GST Number</th>
+            <th style="width: 110px;">Status</th>
+            <th style="width: 100px; text-align: center;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let comp of filteredCompanies">
+            <td class="font-bold font-mono text-muted">#{{ comp.id }}</td>
+            <td class="company-name-cell font-bold">{{ comp.companyName }}</td>
+            <td class="font-bold">{{ comp.contactPerson }}</td>
+            <td class="font-mono text-muted">{{ comp.phone }}</td>
+            <td>
+              @if (comp.city && comp.city != '-') {
+              <i class="ri-map-pin-line text-red"></i>
+              }
+              {{ comp.city }}
+            </td>
+            <td class="font-mono text-muted">{{ comp.gstNumber }}</td>
+            <td>
+              <span class="order-status-pill dispatched">
+                <span class="status-dot"></span>
+                <span>{{ comp.status }}</span>
+              </span>
+            </td>
+            <td class="action-cell">
+              <div class="action-btn-group">
+                <button type="button" class="modern-action-btn edit-action" (click)="editCompany(comp)"
+                  title="Edit Company">
+                  <i class="ri-pencil-line"></i>
+                </button>
+                <button type="button" class="modern-action-btn view-action" (click)="viewCompany(comp)"
+                  title="View Details">
+                  <i class="ri-eye-line"></i>
+                </button>
+                <button type="button" class="modern-action-btn delete-action" (click)="deleteCompany(comp)"
+                  title="Delete Company">
+                  <i class="ri-delete-bin-line"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredCompanies.length === 0">
+            <td colspan="8" class="empty-table-cell">
+              <div class="empty-state-box">
+                <i class="ri-building-line"></i>
+                <p>No companies found matching search.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+    <div class="mobile-orders-cards-container">
+      <div *ngIf="filteredCompanies.length === 0" class="empty-state-box">
+        <i class="ri-building-line"></i>
+        <p>No companies found.</p>
+      </div>
+
+      <div *ngFor="let comp of filteredCompanies" class="order-mobile-card">
+        <div class="mobile-card-header">
+          <div class="id-date-meta">
+            <span class="card-order-id font-bold font-mono">#{{ comp.id }}</span>
+            <span class="order-status-pill dispatched" style="padding: 2px 7px; font-size: 10px;">
+              <span class="status-dot"></span>
+              {{ comp.status }}
+            </span>
+          </div>
+          <div class="action-btn-group">
+            <button type="button" class="modern-action-btn edit-action" (click)="editCompany(comp)"
+              title="Edit Company">
+              <i class="ri-pencil-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn view-action" (click)="viewCompany(comp)"
+              title="View Details">
+              <i class="ri-eye-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn delete-action" (click)="deleteCompany(comp)"
+              title="Delete Company">
+              <i class="ri-delete-bin-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-card-body">
+          <h4 class="card-company-name"><i class="ri-building-line text-red"></i> {{ comp.companyName }}</h4>
+          <div class="card-product-name"><i class="ri-user-line text-muted"></i> {{ comp.contactPerson }}</div>
+        </div>
+
+        <div class="mobile-card-grid">
+          <div class="card-grid-item">
+            <span class="grid-item-label">Phone</span>
+            <span class="grid-item-val font-mono">{{ comp.phone }}</span>
+          </div>
+          <div class="card-grid-item">
+            <span class="grid-item-label">City</span>
+            <span class="grid-item-val">{{ comp.city }}</span>
+          </div>
+        </div>
+
+        <div class="mobile-card-footer">
+          <span class="footer-lbl"><i class="ri-file-text-line"></i> GST:</span>
+          <span class="footer-val font-mono">{{ comp.gstNumber }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD / EDIT COMPANY POPUP MODAL -->
+<div class="modal-backdrop" *ngIf="showAddCompanyModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-building-line text-red"></i>
+        <span>{{ selectedCompany() ? 'Edit Company #' + selectedCompany()?.id : 'Add New Company Master' }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showAddCompanyModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="field-label">Company Name *</label>
+        <input type="text" [(ngModel)]="newCompany.companyName" placeholder="e.g. Apex Electricals & Pumps"
+          class="clean-input font-bold" />
+      </div>
+      <div class="form-field">
+        <label class="field-label">Email ID</label>
+        <input type="text" [(ngModel)]="newCompany.email" placeholder="e.g. abc@gmail.com" class="clean-input" />
+      </div>
+
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label class="field-label">Contact Person</label>
+          <input type="text" [(ngModel)]="newCompany.contactPerson" placeholder="e.g. Vikram Patel"
+            class="clean-input" />
+        </div>
+
+
+        <div class="form-field">
+          <label class="field-label">Phone / Mobile</label>
+          <input type="text" [(ngModel)]="newCompany.phone" placeholder="+91 98250 12345"
+            class="clean-input font-mono" />
+        </div>
+      </div>
+
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label class="field-label">City / State</label>
+          <input type="text" [(ngModel)]="newCompany.city" placeholder="e.g. Ahmedabad, Gujarat" class="clean-input" />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">GSTIN Number</label>
+          <input type="text" [(ngModel)]="newCompany.gstNumber" placeholder="24AABCZ1234E1Z5"
+            class="clean-input font-mono" />
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Status</label>
+        <select [(ngModel)]="newCompany.status" class="clean-input clean-select">
+          <option value="Active">🟢 Active</option>
+          <option value="Inactive">⚪ Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showAddCompanyModal.set(false)">Cancel</button>
+      <button type="button" class="top-add-btn" (click)="saveCompany()">
+        <i class="ri-save-line"></i>
+        <span>{{ selectedCompany() ? 'Update Company' : 'Save Company' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW COMPANY DETAILS MODAL -->
+<div class="modal-backdrop" *ngIf="showViewCompanyModal() && selectedCompany()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-building-line text-red"></i>
+        <span>Company Details — {{ selectedCompany()?.companyName }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showViewCompanyModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedCompany() as comp">
+      <div class="details-view-grid">
+        <div class="view-item">
+          <span class="item-label">Company ID</span>
+          <span class="item-value font-bold font-mono text-red">#{{ comp.id }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Status</span>
+          <span class="item-value font-bold text-green">{{ comp.status }}</span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Company Name</span>
+          <span class="item-value text-red font-bold">{{ comp.companyName }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Contact Person</span>
+          <span class="item-value font-bold">{{ comp.contactPerson }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Phone</span>
+          <span class="item-value font-mono">{{ comp.phone }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">City / Region</span>
+          <span class="item-value">{{ comp.city }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">GST Number</span>
+          <span class="item-value font-mono">{{ comp.gstNumber }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="top-add-btn" (click)="showViewCompanyModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>

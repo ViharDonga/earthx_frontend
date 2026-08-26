@@ -1,0 +1,210 @@
+<div class="dashboard-shell">
+
+  <!-- MOBILE BACKDROP OVERLAY -->
+  <div class="sidebar-mobile-backdrop" *ngIf="isSidebarOpen()" (click)="toggleSidebar()"></div>
+
+  <!-- SIDEBAR (DRAWER ON MOBILE / COLLAPSIBLE ON DESKTOP) -->
+  <aside class="dashboard-sidebar" [class.sidebar-hidden]="!isSidebarOpen()">
+
+    <!-- Sidebar Header Logo & Mobile Close -->
+    <div class="sidebar-brand-box">
+      <div class="brand-top-row">
+        <img src="assets/earthx-logo.png" alt="EarthX Logo" class="sidebar-logo" />
+        <button type="button" class="sidebar-close-btn" (click)="toggleSidebar()" title="Close Sidebar">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <span class="brand-tagline">THE <span class="text-red font-bold">X</span> FACTOR OF ELECTRONICS</span>
+    </div>
+
+    <!-- User Profile Strip -->
+    <div class="sidebar-user-card">
+      <div class="user-avatar">
+        <i class="ri-user-star-line" *ngIf="authService.currentUser().role === 'super-user'"></i>
+        <i class="ri-user-3-line" *ngIf="authService.currentUser().role === 'user'"></i>
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ authService.currentUser().fullName }}</span>
+        <span class="user-role-badge" [class.super-user]="authService.currentUser().role === 'super-user'">
+          <i class="ri-shield-fill" *ngIf="authService.currentUser().role === 'super-user'"></i>
+          {{ authService.currentUser().roleLabel }}
+        </span>
+      </div>
+
+      <!-- Quick Role Toggle -->
+      <div class="role-switcher-dropdown" title="Toggle between Super User and User">
+        <button type="button" class="role-pill-btn" [class.active]="authService.currentUser().role === 'super-user'"
+          (click)="switchRole('super-user')">
+          Super
+        </button>
+        <button type="button" class="role-pill-btn" [class.active]="authService.currentUser().role === 'user'"
+          (click)="switchRole('user')">
+          User
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">OPERATIONS</div>
+
+      <!-- 1. ORDER MODULE (Order List & Dispatch List) -->
+      <div class="nav-group">
+        <button type="button" class="nav-parent-btn" (click)="toggleOrderMenu()">
+          <div class="btn-title-left">
+            <i class="ri-shopping-cart-2-line nav-icon text-red"></i>
+            <span>Order</span>
+          </div>
+          <i class="ri-arrow-down-s-line chevron" [class.rotated]="!isOrderMenuOpen()"></i>
+        </button>
+
+        <div class="nav-submenu" *ngIf="isOrderMenuOpen()">
+          <a href="javascript:void(0)" class="submenu-link" [class.active]="activeView() === 'orders-list'"
+            (click)="selectMenuItem('orders-list')">
+            <div class="link-label-group">
+              <i class="ri-list-check-2"></i>
+              <span>Order List</span>
+            </div>
+            <span class="nav-counter-badge">{{ orderService.orders().length }}</span>
+          </a>
+
+          <a href="javascript:void(0)" class="submenu-link" [class.active]="activeView() === 'orders-dispatch'"
+            (click)="selectMenuItem('orders-dispatch')">
+            <div class="link-label-group">
+              <i class="ri-truck-line"></i>
+              <span>Dispatch</span>
+            </div>
+            <span class="nav-counter-badge dispatch-badge">
+              {{ dispatchCount }}
+            </span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 2. MASTER MODULE (Company & Product) -->
+      <div class="nav-group" *ngIf="authService.currentUser().role === 'super-user'">
+        <div class="nav-section-title">ADMINISTRATION</div>
+
+        <button type="button" class="nav-parent-btn" (click)="toggleMasterMenu()">
+          <div class="btn-title-left">
+            <i class="ri-settings-5-line nav-icon text-red"></i>
+            <span>Master</span>
+          </div>
+          <i class="ri-arrow-down-s-line chevron" [class.rotated]="!isMasterMenuOpen()"></i>
+        </button>
+
+        <div class="nav-submenu" *ngIf="isMasterMenuOpen()">
+          <a href="javascript:void(0)" class="submenu-link" [class.active]="activeView() === 'master-company'"
+            (click)="selectMenuItem('master-company')">
+            <div class="link-label-group">
+              <i class="ri-building-2-line"></i>
+              <span>Company</span>
+            </div>
+          </a>
+
+          <a href="javascript:void(0)" class="submenu-link" [class.active]="activeView() === 'master-product'"
+            (click)="selectMenuItem('master-product')">
+            <div class="link-label-group">
+              <i class="ri-cpu-line"></i>
+              <span>Product</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar Bottom Footer / Logout -->
+    <div class="sidebar-footer">
+      <button type="button" class="logout-btn" (click)="handleLogout()">
+        <i class="ri-logout-box-r-line"></i>
+        <span>Sign Out</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- RIGHT MAIN CONTENT WRAPPER -->
+  <div class="dashboard-main-area">
+
+    <!-- Top Dashboard Header Bar -->
+    <header class="top-nav-bar">
+      <div class="nav-bar-left">
+        <!-- HAMBURGER SIDEBAR TOGGLE BUTTON -->
+        <button type="button" class="sidebar-toggle-btn" (click)="toggleSidebar()"
+          [title]="isSidebarOpen() ? 'Close Sidebar' : 'Open Sidebar'">
+          <i [class]="isSidebarOpen() ? 'ri-menu-fold-line' : 'ri-menu-unfold-line'"></i>
+        </button>
+
+        <h2 class="page-current-title">
+          <span *ngIf="activeView() === 'orders-list'"><i class="ri-list-check-2 text-red"></i> Order List</span>
+          <span *ngIf="activeView() === 'orders-dispatch'"><i class="ri-truck-line text-red"></i> Dispatch List</span>
+          <span *ngIf="activeView() === 'master-company'"><i class="ri-building-2-line text-red"></i> Company Master</span>
+          <span *ngIf="activeView() === 'master-product'"><i class="ri-cpu-line text-red"></i> Product Master</span>
+        </h2>
+      </div>
+
+      <div class="nav-bar-right">
+        <!-- THEME TOGGLE (LIGHT / DARK) -->
+        <button type="button" class="theme-toggle-btn" (click)="themeService.toggleTheme()"
+          [title]="themeService.currentTheme() === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'">
+          <i class="ri-sun-line text-amber" *ngIf="themeService.currentTheme() === 'dark'"></i>
+          <i class="ri-moon-clear-line text-blue" *ngIf="themeService.currentTheme() === 'light'"></i>
+          <span class="hide-mobile">{{ themeService.currentTheme() === 'dark' ? 'Light' : 'Dark' }}</span>
+        </button>
+
+        <!-- Top Action Button -->
+        <button type="button" class="top-add-btn"
+          *ngIf="activeView() === 'orders-list' || activeView() === 'orders-dispatch'" 
+          (click)="triggerTopAction()">
+          <i class="ri-add-line"></i>
+          <span>Add Order</span>
+        </button>
+
+        <button type="button" class="top-add-btn" 
+          *ngIf="activeView() === 'master-company'" 
+          (click)="triggerTopAction()">
+          <i class="ri-add-line"></i>
+          <span>Add Company</span>
+        </button>
+
+        <button type="button" class="top-add-btn" 
+          *ngIf="activeView() === 'master-product'" 
+          (click)="triggerTopAction()">
+          <i class="ri-add-line"></i>
+          <span>Add Product</span>
+        </button>
+
+        <div class="user-pill-top">
+          <i class="ri-user-3-fill text-red"></i>
+          <span class="hide-mobile">{{ authService.currentUser().username }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION BANNER -->
+    <div class="toast-notification-banner" *ngIf="orderService.toastMessage()" (click)="orderService.toastMessage.set(null)">
+      <div class="toast-content">
+        <i class="ri-checkbox-circle-fill text-green"></i>
+        <span>{{ orderService.toastMessage() }}</span>
+      </div>
+      <i class="ri-close-line toast-close"></i>
+    </div>
+
+    <!-- MAIN DYNAMIC VIEW CONTAINER -->
+    <main class="content-body">
+      <!-- 1. ORDER LIST COMPONENT -->
+      <app-order-list *ngIf="activeView() === 'orders-list'"></app-order-list>
+
+      <!-- 2. DISPATCH LIST COMPONENT -->
+      <app-dispatch-list *ngIf="activeView() === 'orders-dispatch'"></app-dispatch-list>
+
+      <!-- 3. COMPANY MASTER COMPONENT -->
+      <app-company-master *ngIf="activeView() === 'master-company'"></app-company-master>
+
+      <!-- 4. PRODUCT MASTER COMPONENT -->
+      <app-product-master *ngIf="activeView() === 'master-product'"></app-product-master>
+    </main>
+
+  </div>
+
+</div>

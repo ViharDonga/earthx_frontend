@@ -1,0 +1,352 @@
+<div class="earthx-auth-page">
+  <!-- Dynamic PCB Grid & Ambient Red Glows -->
+  <div class="pcb-bg-grid"></div>
+  <div class="ambient-glow glow-red-top"></div>
+  <div class="ambient-glow glow-red-bottom"></div>
+  <div class="ambient-glow glow-cyan-corner"></div>
+
+  <!-- Main Container -->
+  <div class="earthx-container">
+
+    <!-- Top Bar -->
+    <header class="earthx-top-bar">
+      <div class="company-badge-left">
+        <img src="assets/earthx-logo.png" alt="EarthX - The X Factor of Electronics" class="nav-logo" />
+      </div>
+
+      <div class="top-bar-meta">
+        <span class="meta-tag"><i class="ri-building-line text-red"></i> Earthx Technologies Pvt. Ltd.</span>
+        <span class="meta-divider hide-mobile">|</span>
+        <span class="meta-tag hide-mobile"><i class="ri-map-pin-line text-red"></i> Ahmedabad</span>
+
+        <!-- THEME TOGGLE (LIGHT / DARK) -->
+        <button type="button" class="theme-toggle-btn" (click)="themeService.toggleTheme()"
+          [title]="themeService.currentTheme() === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'">
+          <i class="ri-sun-line text-amber" *ngIf="themeService.currentTheme() === 'dark'"></i>
+          <i class="ri-moon-clear-line text-blue" *ngIf="themeService.currentTheme() === 'light'"></i>
+          <span>{{ themeService.currentTheme() === 'dark' ? 'Light' : 'Dark' }}</span>
+        </button>
+
+        <div class="system-status-pill">
+          <span class="live-dot"></span>
+          <span>PORTAL ACTIVE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dual-Column Layout -->
+    <div class="auth-main-layout">
+
+      <!-- LEFT COLUMN: Visually Stunning PCB Image Showcase -->
+      <aside class="earthx-pcb-hero-panel">
+        <div class="pcb-image-container">
+          <img src="assets/pcb-showcase.jpg" alt="EarthX High-Tech PCB Controller Design" class="pcb-hero-image" />
+          <div class="pcb-image-overlay"></div>
+          <div class="pcb-scanline"></div>
+        </div>
+
+        <!-- Glassmorphic Content Card Overlay on PCB -->
+        <div class="pcb-hero-overlay-content">
+          <div class="hero-brand-badge">
+            <img src="assets/earthx-logo.png" alt="EarthX Logo" class="hero-logo-img" />
+          </div>
+
+          <div class="hero-text-block">
+            <h2 class="hero-heading">
+              Smart <span class="text-red">PCB Controllers</span> & Electronic Automation
+            </h2>
+            <p class="hero-tagline">THE <span class="text-red font-bold">X</span> FACTOR OF ELECTRONICS</p>
+          </div>
+
+          <!-- High-Tech Floating Feature Chips -->
+          <div class="hero-chips-row">
+            <div class="hero-chip">
+              <i class="ri-cpu-line text-red"></i>
+              <span>Smart PCB Design</span>
+            </div>
+            <div class="hero-chip">
+              <i class="ri-shield-check-line text-red"></i>
+              <span>ISO 9001:2015</span>
+            </div>
+            <div class="hero-chip">
+              <i class="ri-flashlight-line text-red"></i>
+              <span>Surge Protection</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT COLUMN: Clean, Attractive Auth Card -->
+      <main class="earthx-form-card">
+
+        <!-- Logo Header in Form -->
+        <div class="form-header-box">
+          <img src="assets/earthx-logo.png" alt="EarthX Logo" class="form-main-logo" />
+          <p class="form-tagline">THE <span class="text-red font-bold">X</span> FACTOR OF ELECTRONICS</p>
+        </div>
+
+        <!-- Navigation Tabs: Login & Register -->
+        <div class="auth-tabs-nav">
+          <button type="button" class="auth-tab-btn" [class.active]="activeTab() === 'login'"
+            (click)="switchTab('login')">
+            <i class="ri-login-circle-line"></i>
+            <span>Sign In</span>
+          </button>
+
+          <button type="button" class="auth-tab-btn" [class.active]="activeTab() === 'register'"
+            (click)="switchTab('register')">
+            <i class="ri-user-add-line"></i>
+            <span>Create Account</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: LOGIN FORM -->
+        <div class="tab-panel" *ngIf="activeTab() === 'login'">
+          <div class="panel-header">
+            <h2 class="panel-title">Welcome Back</h2>
+            <p class="panel-subtitle">Sign in with your EarthX credentials to access your control portal.</p>
+          </div>
+
+          <form (ngSubmit)="handleLogin()" class="auth-form">
+            <!-- Username or Email -->
+            <div class="form-field">
+              <label class="field-label" for="login-username">
+                <span>Email</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="field-input-box">
+                <i class="ri-user-3-line field-icon"></i>
+                <input id="login-username" name="username" type="text" [(ngModel)]="loginData.username"
+                  placeholder="e.g. superuser@earthx.in or user@earthx.in" required class="clean-input"
+                  autocomplete="username" />
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-field">
+              <div class="field-label-row">
+                <label class="field-label" for="login-password">
+                  <span>Password</span>
+                  <span class="required-star">*</span>
+                </label>
+              </div>
+              <div class="field-input-box">
+                <i class="ri-lock-password-line field-icon"></i>
+                <input id="login-password" name="password" [type]="showLoginPassword() ? 'text' : 'password'"
+                  [(ngModel)]="loginData.password" placeholder="Enter your password" required class="clean-input"
+                  autocomplete="current-password" />
+                <button type="button" class="eye-toggle-btn" (click)="showLoginPassword.set(!showLoginPassword())"
+                  [title]="showLoginPassword() ? 'Hide password' : 'Show password'">
+                  <i [class]="showLoginPassword() ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Remember Me & Help -->
+            <div class="form-options">
+              <label class="remember-label">
+                <input type="checkbox" name="rememberMe" [(ngModel)]="loginData.rememberMe" />
+                <span class="custom-check"></span>
+                <span>Keep me signed in</span>
+              </label>
+
+              <span class="help-text">Need access? Contact Admin</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="earthx-submit-btn">
+              <span>Sign In to EarthX</span>
+              <i class="ri-arrow-right-line btn-arrow"></i>
+            </button>
+          </form>
+
+          <div class="switch-auth-prompt">
+            <span>Don't have an account?</span>
+            <button type="button" class="switch-link" (click)="switchTab('register')">Register New Account</button>
+          </div>
+        </div>
+
+        <!-- TAB 2: REGISTRATION FORM -->
+        <div class="tab-panel" *ngIf="activeTab() === 'register'">
+          <div class="panel-header">
+            <h2 class="panel-title">Register Account</h2>
+            <p class="panel-subtitle">Create your Earthx Technologies user account with assigned role.</p>
+          </div>
+
+          <form (ngSubmit)="handleRegister()" class="auth-form">
+            <!-- Full Name & Username -->
+            <!-- <div class="form-grid-2"> -->
+            <div class="form-field">
+              <label class="field-label" for="reg-fullname">
+                <span>Full Name</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="field-input-box">
+                <i class="ri-user-line field-icon"></i>
+                <input id="reg-fullname" name="fullName" type="text" [(ngModel)]="registerData.fullName"
+                  placeholder="e.g. Rajesh Kumar" required class="clean-input" />
+              </div>
+            </div>
+            <!-- 
+              <div class="form-field">
+                <label class="field-label" for="reg-username">
+                  <span>Username / User ID</span>
+                  <span class="required-star">*</span>
+                </label>
+                <div class="field-input-box">
+                  <i class="ri-at-line field-icon"></i>
+                  <input 
+                    id="reg-username"
+                    name="username"
+                    type="text" 
+                    [(ngModel)]="registerData.username" 
+                    placeholder="e.g. rajesh_k"
+                    required
+                    class="clean-input"
+                  />
+                </div>
+              </div> -->
+            <!-- </div> -->
+
+            <!-- Email & Phone -->
+            <div class="form-grid-2">
+              <div class="form-field">
+                <label class="field-label" for="reg-email">
+                  <span>Email Address</span>
+                  <span class="required-star">*</span>
+                </label>
+                <div class="field-input-box">
+                  <i class="ri-mail-line field-icon"></i>
+                  <input id="reg-email" name="email" type="email" [(ngModel)]="registerData.email"
+                    placeholder="name@earthx.in" required class="clean-input" />
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label" for="reg-phone">
+                  <span>Phone / Mobile</span>
+                </label>
+                <div class="field-input-box">
+                  <i class="ri-phone-line field-icon"></i>
+                  <input id="reg-phone" name="phone" type="tel" [(ngModel)]="registerData.phone"
+                    placeholder="+91 98765 43210" class="clean-input" />
+                </div>
+              </div>
+            </div>
+
+            <!-- ROLE DROPDOWN: SUPER USER & USER -->
+            <div class="form-field">
+              <label class="field-label" for="reg-role">
+                <span>Select Role</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="field-input-box custom-select-box">
+                <i class="ri-shield-user-line field-icon"></i>
+                <select id="reg-role" name="selectedRoleId" [(ngModel)]="registerData.selectedRoleId"
+                  class="clean-input clean-select">
+                  <option *ngFor="let role of availableRoles" [value]="role.id">
+                    {{ role.name }} ({{ role.badge }})
+                  </option>
+                </select>
+                <i class="ri-arrow-down-s-line select-arrow-icon"></i>
+              </div>
+            </div>
+
+            <!-- Password & Confirm Password -->
+            <div class="form-grid-2">
+              <div class="form-field">
+                <label class="field-label" for="reg-password">
+                  <span>Password</span>
+                  <span class="required-star">*</span>
+                </label>
+                <div class="field-input-box">
+                  <i class="ri-lock-line field-icon"></i>
+                  <input id="reg-password" name="password" [type]="showRegisterPassword() ? 'text' : 'password'"
+                    [(ngModel)]="registerData.password" placeholder="Min. 8 characters" required class="clean-input" />
+                  <button type="button" class="eye-toggle-btn"
+                    (click)="showRegisterPassword.set(!showRegisterPassword())">
+                    <i [class]="showRegisterPassword() ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label" for="reg-confirm-pwd">
+                  <span>Confirm Password</span>
+                  <span class="required-star">*</span>
+                </label>
+                <div class="field-input-box">
+                  <i class="ri-lock-check-line field-icon"></i>
+                  <input id="reg-confirm-pwd" name="confirmPassword"
+                    [type]="showRegisterConfirmPassword() ? 'text' : 'password'"
+                    [(ngModel)]="registerData.confirmPassword" placeholder="Re-enter password" required
+                    class="clean-input" />
+                  <button type="button" class="eye-toggle-btn"
+                    (click)="showRegisterConfirmPassword.set(!showRegisterConfirmPassword())">
+                    <i [class]="showRegisterConfirmPassword() ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Strength Bar -->
+            <div class="password-meter-box" *ngIf="registerData.password">
+              <div class="meter-info">
+                <span>Password Strength:</span>
+                <strong [style.color]="passwordStrength().color">{{ passwordStrength().text }}</strong>
+              </div>
+              <div class="meter-track">
+                <div class="meter-bar" [style.width]="passwordStrength().width"
+                  [style.background-color]="passwordStrength().color"></div>
+              </div>
+            </div>
+
+            <!-- Terms checkbox -->
+            <label class="remember-label terms-check">
+              <input type="checkbox" name="agreeTerms" [(ngModel)]="registerData.agreeTerms" required />
+              <span class="custom-check"></span>
+              <span>I agree to Earthx Technologies internal security and operational policies</span>
+            </label>
+
+            <!-- Register Button -->
+            <button type="submit" class="earthx-submit-btn">
+              <span>Create EarthX Account</span>
+              <i class="ri-arrow-right-line btn-arrow"></i>
+            </button>
+          </form>
+
+          <div class="switch-auth-prompt">
+            <span>Already have an account?</span>
+            <button type="button" class="switch-link" (click)="switchTab('login')">Sign In here</button>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+
+    <!-- Bottom Footer -->
+    <footer class="earthx-footer">
+      <p>&copy; 2026 Earthx Technologies Private Limited. All Rights Reserved. | <strong>THE X FACTOR OF
+          ELECTRONICS</strong></p>
+    </footer>
+
+  </div>
+
+  <!-- Toast Notification Stack -->
+  <div class="toast-stack" *ngIf="toasts().length > 0">
+    <div *ngFor="let toast of toasts()" class="toast-item" [ngClass]="toast.type" (click)="removeToast(toast.id)">
+      <div class="toast-icon">
+        <i class="ri-checkbox-circle-fill" *ngIf="toast.type === 'success'"></i>
+        <i class="ri-information-fill" *ngIf="toast.type === 'info'"></i>
+        <i class="ri-alert-fill" *ngIf="toast.type === 'warning'"></i>
+        <i class="ri-close-circle-fill" *ngIf="toast.type === 'error'"></i>
+      </div>
+      <div class="toast-text">
+        <h5>{{ toast.title }}</h5>
+        <p>{{ toast.message }}</p>
+      </div>
+      <button type="button" class="toast-close-btn"><i class="ri-close-line"></i></button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,80 @@
+<!-- Global Confirmation Dialog Overlay -->
+<div 
+  class="confirm-backdrop" 
+  *ngIf="commonService.confirmDialog() as dialog"
+  (click)="onBackdropClick($event)"
+>
+  <div class="confirm-modal-box" [ngClass]="dialog.type || 'danger'">
+    <!-- Close Icon Button -->
+    <button type="button" class="confirm-close-btn" (click)="cancel()" title="Cancel (Esc)">
+      <i class="ri-close-line"></i>
+    </button>
+
+    <!-- Glowing Icon Badge -->
+    <div class="confirm-icon-wrapper" [ngClass]="dialog.type || 'danger'">
+      <div class="icon-pulse-ring"></div>
+      <div class="icon-circle">
+        <i [class]="dialog.icon || getIcon(dialog.type)"></i>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="confirm-content">
+      <h3 class="confirm-title">{{ dialog.title || 'Confirm Action' }}</h3>
+      <p class="confirm-message">{{ dialog.message }}</p>
+
+      <!-- Sub-message / Contextual Info Box if available -->
+      <div class="confirm-sub-box" *ngIf="dialog.subMessage">
+        <i class="ri-information-line"></i>
+        <span>{{ dialog.subMessage }}</span>
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="confirm-actions">
+      <button 
+        type="button" 
+        class="confirm-btn-cancel" 
+        (click)="cancel()"
+      >
+        <span>{{ dialog.cancelText || 'Cancel' }}</span>
+        <kbd class="shortcut-key">Esc</kbd>
+      </button>
+
+      <button 
+        type="button" 
+        class="confirm-btn-action" 
+        [ngClass]="dialog.type || 'danger'" 
+        (click)="confirm()"
+      >
+        <i [class]="dialog.type === 'danger' ? 'ri-delete-bin-line' : 'ri-check-line'"></i>
+        <span>{{ dialog.confirmText || 'Confirm' }}</span>
+        <kbd class="shortcut-key">↵</kbd>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Global Floating Toast Stack -->
+<div class="global-toast-container" *ngIf="commonService.toasts().length > 0">
+  <div 
+    *ngFor="let toast of commonService.toasts()" 
+    class="global-toast-item" 
+    [ngClass]="toast.type"
+    (click)="commonService.removeToast(toast.id)"
+  >
+    <div class="toast-icon-side">
+      <i class="ri-checkbox-circle-fill" *ngIf="toast.type === 'success'"></i>
+      <i class="ri-information-fill" *ngIf="toast.type === 'info'"></i>
+      <i class="ri-alert-fill" *ngIf="toast.type === 'warning'"></i>
+      <i class="ri-error-warning-fill" *ngIf="toast.type === 'error'"></i>
+    </div>
+    <div class="toast-body">
+      <div class="toast-title">{{ toast.title }}</div>
+      <div class="toast-desc">{{ toast.message }}</div>
+    </div>
+    <button type="button" class="toast-close-btn" (click)="commonService.removeToast(toast.id)">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+</div>

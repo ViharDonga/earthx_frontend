@@ -1,0 +1,283 @@
+<div class="view-section">
+  <div class="data-table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-title-group">
+        <div class="title-with-badge">
+          <h3 class="toolbar-title">Dispatch Register</h3>
+          <span class="active-count-badge dispatch-count">{{ dispatchOrders.length }}</span>
+        </div>
+        <p class="toolbar-subtitle">Orders ready for dispatch or in transit</p>
+      </div>
+      
+      <div class="toolbar-actions-grid">
+        <!-- COMPANY NAME DROPDOWN FILTER -->
+        <div class="filter-field-group company-filter-group">
+          <label class="filter-label"><i class="ri-building-line text-red"></i> Company:</label>
+          <select class="filter-select company-select" [(ngModel)]="selectedCompanyFilter">
+            <option value="All">All Companies</option>
+            <option *ngFor="let c of companyService.companies()" [value]="c.companyName">{{ c.companyName }}</option>
+          </select>
+        </div>
+
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+          <input type="text" placeholder="Search dispatch orders..." [(ngModel)]="searchQuery" />
+        </div>
+      </div>
+    </div>
+
+    <!-- DESKTOP TABLE -->
+    <div class="table-scroll-container desktop-table-view">
+      <table class="earthx-table exact-theme-table">
+        <thead>
+          <tr>
+            <th style="width: 80px;">Order Id</th>
+            <th style="width: 120px; text-align: center;">Action</th>
+            <th style="width: 105px;">Date</th>
+            <th>Company Name</th>
+            <th>Product Name</th>
+            <th style="width: 80px;">Qty</th>
+            <th style="width: 120px;">Priorities</th>
+            <th>LASER PRINT</th>
+            <th style="width: 160px;">Order Status</th>
+            <th style="width: 130px;">Box</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of dispatchOrders">
+            <td class="font-bold text-dark-bold">{{ row.orderId }}</td>
+
+            <td class="action-cell">
+              <div class="action-btn-group">
+                <button 
+                  type="button" 
+                  class="modern-action-btn process-action" 
+                  (click)="quickProcessOrder(row)" 
+                  [title]="'Advance Status from ' + row.orderStatus"
+                >
+                  <span class="double-plus-icon">
+                    <i class="ri-add-line"></i>
+                    <i class="ri-add-line"></i>
+                  </span>
+                </button>
+                <button type="button" class="modern-action-btn edit-action" (click)="editOrder(row)" title="Update Dispatch">
+                  <i class="ri-pencil-line"></i>
+                </button>
+                <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View Details">
+                  <i class="ri-eye-line"></i>
+                </button>
+              </div>
+            </td>
+
+            <td class="date-cell">{{ row.date }}</td>
+            <td class="company-name-cell">{{ row.companyName }}</td>
+            <td class="product-name-cell">{{ row.productName }}</td>
+            <td class="qty-cell font-bold">{{ row.qty | number }}</td>
+
+            <td>
+              <span class="priority-tag" [ngClass]="row.priority.toLowerCase()">
+                <i class="ri-fire-fill" *ngIf="row.priority === 'High'"></i>
+                <i class="ri-flashlight-fill" *ngIf="row.priority === 'Medium'"></i>
+                <i class="ri-checkbox-circle-fill" *ngIf="row.priority === 'Low'"></i>
+                <span>{{ row.priority }}</span>
+              </span>
+            </td>
+
+            <td class="laser-print-cell font-mono">{{ row.laserPrint || '—' }}</td>
+
+            <td>
+              <span class="order-status-pill" [ngClass]="row.orderStatus.toLowerCase().replace(' ', '-')">
+                <span class="status-dot"></span>
+                <span>{{ row.orderStatus }}</span>
+              </span>
+            </td>
+
+            <td>
+              <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'" [class.without-box]="row.box === 'Without Box'">
+                <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
+                <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
+                <span>{{ row.box }}</span>
+              </span>
+            </td>
+          </tr>
+
+          <tr *ngIf="dispatchOrders.length === 0">
+            <td colspan="10" class="empty-table-cell">
+              <div class="empty-state-box">
+                <i class="ri-truck-line"></i>
+                <p>No dispatch orders found matching criteria.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+    <div class="mobile-orders-cards-container">
+      <div *ngIf="dispatchOrders.length === 0" class="empty-state-box">
+        <i class="ri-truck-line"></i>
+        <p>No dispatch orders found.</p>
+      </div>
+
+      <div *ngFor="let row of dispatchOrders" class="order-mobile-card">
+        <div class="mobile-card-header">
+          <div class="id-date-meta">
+            <span class="card-order-id font-bold">#{{ row.orderId }}</span>
+            <span class="card-date-badge"><i class="ri-calendar-line"></i> {{ row.date }}</span>
+          </div>
+          <div class="action-btn-group">
+            <button type="button" class="modern-action-btn process-action" (click)="quickProcessOrder(row)" title="Advance Status">
+              <span class="double-plus-icon">
+                <i class="ri-add-line"></i>
+                <i class="ri-add-line"></i>
+              </span>
+            </button>
+            <button type="button" class="modern-action-btn edit-action" (click)="editOrder(row)" title="Update">
+              <i class="ri-pencil-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mobile-card-body">
+          <h4 class="card-company-name"><i class="ri-building-line text-red"></i> {{ row.companyName }}</h4>
+          <div class="card-product-name"><i class="ri-cpu-line text-muted"></i> {{ row.productName }}</div>
+        </div>
+        <div class="mobile-card-grid">
+          <div class="card-grid-item">
+            <span class="grid-item-label">Qty</span>
+            <span class="grid-item-val font-bold">{{ row.qty | number }}</span>
+          </div>
+          <div class="card-grid-item">
+            <span class="grid-item-label">Priority</span>
+            <span class="priority-tag" [ngClass]="row.priority.toLowerCase()">
+              <i class="ri-fire-fill" *ngIf="row.priority === 'High'"></i>
+              <i class="ri-flashlight-fill" *ngIf="row.priority === 'Medium'"></i>
+              <i class="ri-checkbox-circle-fill" *ngIf="row.priority === 'Low'"></i>
+              <span>{{ row.priority }}</span>
+            </span>
+          </div>
+          <div class="card-grid-item">
+            <span class="grid-item-label">Status</span>
+            <span class="order-status-pill" [ngClass]="row.orderStatus.toLowerCase().replace(' ', '-')">
+              <span class="status-dot"></span>
+              <span>{{ row.orderStatus }}</span>
+            </span>
+          </div>
+          <div class="card-grid-item">
+            <span class="grid-item-label">Packaging</span>
+            <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'" [class.without-box]="row.box === 'Without Box'">
+              <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
+              <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
+              <span>{{ row.box }}</span>
+            </span>
+          </div>
+        </div>
+        <div class="mobile-card-footer" *ngIf="row.laserPrint">
+          <span class="footer-lbl"><i class="ri-qr-code-line"></i> LASER:</span>
+          <span class="footer-val font-mono">{{ row.laserPrint }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT DISPATCH MODAL -->
+<div class="modal-backdrop" *ngIf="showEditOrderModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-truck-line text-red"></i>
+        <span>Update Dispatch Order #{{ selectedOrder()?.orderId }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showEditOrderModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="field-label">Order Status *</label>
+        <select [(ngModel)]="newOrder.orderStatus" class="clean-input clean-select">
+          <option value="Ready to Dispatch">🟡 Ready to Dispatch</option>
+          <option value="Dispatched">🟢 Dispatched</option>
+          <option value="Process">🔴 Process (Move Back)</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Quantity</label>
+        <input type="number" [(ngModel)]="newOrder.qty" class="clean-input font-bold" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">LASER PRINT</label>
+        <input type="text" [(ngModel)]="newOrder.laserPrint" class="clean-input font-mono uppercase" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showEditOrderModal.set(false)">Cancel</button>
+      <button type="button" class="top-add-btn" (click)="saveOrder()">
+        <i class="ri-save-line"></i>
+        <span>Update Dispatch</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-backdrop" *ngIf="showViewOrderModal() && selectedOrder()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-eye-line text-red"></i>
+        <span>Dispatch Details — #{{ selectedOrder()?.orderId }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showViewOrderModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedOrder() as ord">
+      <div class="details-view-grid">
+        <div class="view-item">
+          <span class="item-label">Order ID</span>
+          <span class="item-value font-bold text-red">#{{ ord.orderId }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Order Date</span>
+          <span class="item-value">{{ ord.date }}</span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Company Name</span>
+          <span class="item-value text-red font-bold">{{ ord.companyName }}</span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Product Model</span>
+          <span class="item-value font-bold">{{ ord.productName }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Quantity</span>
+          <span class="item-value font-bold">{{ ord.qty | number }} pcs</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Order Status</span>
+          <span class="item-value">
+            <span class="order-status-pill" [ngClass]="ord.orderStatus.toLowerCase().replace(' ', '-')">
+              <span class="status-dot"></span>
+              <span>{{ ord.orderStatus }}</span>
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="top-add-btn" (click)="showViewOrderModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>

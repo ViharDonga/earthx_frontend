@@ -1,0 +1,512 @@
+<div class="view-section">
+  <div class="data-table-card">
+
+    <!-- TOOLBAR & FILTERS -->
+    <div class="table-toolbar">
+      <div class="toolbar-title-group">
+        <div class="title-with-badge">
+          <h3 class="toolbar-title">Orders Register</h3>
+          <span class="active-count-badge">{{ filteredOrders.length }} / {{ orderService.orders().length }}</span>
+        </div>
+
+        <button type="button" class="top-add-btn" (click)="openAddOrder()">
+          <i class="ri-add-line"></i>
+          <span>Add Order</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filter Grid (Date, Box, Priority, Status, Company, Search) -->
+      <div class="toolbar-actions-grid">
+        <!-- 1. DATE FROM -->
+        <div class="filter-field-group">
+          <label class="filter-label"><i class="ri-calendar-event-line text-red"></i> From:</label>
+          <input type="date" class="filter-date-input" [(ngModel)]="filterDateFrom" title="Filter Date From" />
+        </div>
+
+        <!-- 2. DATE TO -->
+        <div class="filter-field-group">
+          <label class="filter-label"><i class="ri-calendar-check-line text-red"></i> To:</label>
+          <input type="date" class="filter-date-input" [(ngModel)]="filterDateTo" title="Filter Date To" />
+        </div>
+
+        <!-- 3. BOX FILTER (With Box / Without Box) -->
+        <div class="filter-field-group">
+          <label class="filter-label"><i class="ri-box-3-line text-purple"></i> Box:</label>
+          <select class="filter-select" [(ngModel)]="filterBox">
+            <option value="All">All Box</option>
+            <option value="With Box">📦 With Box</option>
+            <option value="Without Box">🚫 Without Box</option>
+          </select>
+        </div>
+
+        <!-- 4. PRIORITY FILTER -->
+        <div class="filter-field-group">
+          <label class="filter-label"><i class="ri-fire-line text-amber"></i> Priority:</label>
+          <select class="filter-select" [(ngModel)]="filterPriority">
+            <option value="All">All Priority</option>
+            <option value="High">🔥 High</option>
+            <option value="Medium">⚡ Medium</option>
+            <option value="Low">🟢 Low</option>
+          </select>
+        </div>
+
+        <!-- 5. STATUS FILTER -->
+        <div class="filter-field-group">
+          <label class="filter-label"><i class="ri-loader-line text-blue"></i> Status:</label>
+          <select class="filter-select" [(ngModel)]="filterStatus">
+            <option value="All">All Active (Process & Ready)</option>
+            <option value="Process">🔴 Process</option>
+            <option value="Ready to Dispatch">🟡 Ready to Dispatch</option>
+            <option value="Dispatched">🟢 Dispatched</option>
+          </select>
+        </div>
+
+        <!-- 6. COMPANY FILTER -->
+        <div class="filter-field-group company-filter-group">
+          <label class="filter-label"><i class="ri-building-line text-red"></i> Company:</label>
+          <select class="filter-select company-select" [(ngModel)]="selectedCompanyFilter">
+            <option value="All">All Companies ({{ companyService.companies().length }})</option>
+            <option *ngFor="let c of companyService.companies()" [value]="c.companyName">
+              {{ c.companyName }}
+            </option>
+          </select>
+        </div>
+
+        <!-- 7. SEARCH BOX -->
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+          <input type="text" placeholder="Search ID, Product, Laser..." [(ngModel)]="searchQuery" />
+        </div>
+
+        <!-- 8. RESET FILTERS BUTTON -->
+        <button type="button" class="reset-filters-btn" *ngIf="hasActiveFilters" (click)="resetFilters()"
+          title="Clear all active filters">
+          <i class="ri-refresh-line"></i>
+          <span>Reset ({{ activeFiltersCount }})</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- DESKTOP / TABLET DATA TABLE -->
+    <div class="table-scroll-container desktop-table-view">
+      <table class="earthx-table exact-theme-table">
+        <thead>
+          <tr>
+            <th style="width: 85px; text-align: center;">Rank</th>
+            <th style="width: 80px;">Order Id</th>
+            <th style="width: 145px; text-align: center;">Action</th>
+            <th style="width: 105px;">Date</th>
+            <th>Company Name</th>
+            <th>Product Name</th>
+            <th style="width: 80px;">Qty</th>
+            <th style="width: 120px;">Priorities <i class="ri-arrow-down-line"></i></th>
+            <th>LASER PRINT</th>
+            <th style="width: 160px;">Order Status</th>
+            <th style="width: 130px;">Box</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredOrders" [class.urgent-row]="row.priority === 'High'"
+            [class.dragging-row]="draggedOrder()?.orderId === row.orderId"
+            [class.drag-over-row]="dragOverOrderId() === row.orderId"
+            [class.recently-ranked]="recentlyMovedOrderId() === row.orderId" draggable="true"
+            (dragstart)="onDragStart($event, row)" (dragover)="onDragOver($event, row)"
+            (dragleave)="onDragLeave($event, row)" (drop)="onDrop($event, row)" (dragend)="onDragEnd()">
+            <!-- 0. Rank & Drag Handle -->
+            <td class="rank-cell">
+              <div class="rank-drag-container">
+                <span class="drag-handle-icon" title="Drag to reorder rank">
+                  <i class="ri-draggable"></i>
+                </span>
+                <span class="rank-badge">#{{ row.srNo }}</span>
+                <div class="rank-steppers">
+                  <button type="button" class="rank-step-btn" (click)="moveRankUp(row)" title="Move Rank Up">
+                    <i class="ri-arrow-up-s-line"></i>
+                  </button>
+                  <button type="button" class="rank-step-btn" (click)="moveRankDown(row)" title="Move Rank Down">
+                    <i class="ri-arrow-down-s-line"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+
+            <!-- 1. Order Id -->
+            <td class="font-bold text-dark-bold">{{ row.orderId }}</td>
+
+            <!-- 2. Action Column (Double Plus Process, Edit, View, Delete) -->
+            <td class="action-cell">
+              <div class="action-btn-group">
+                <!-- Double Plus Quick Process Button -->
+                <button type="button" class="modern-action-btn process-action" (click)="quickProcessOrder(row)"
+                  [title]="'Advance Status from ' + row.orderStatus">
+                  <span class="double-plus-icon">
+                    <i class="ri-add-line"></i>
+                    <i class="ri-add-line"></i>
+                  </span>
+                </button>
+
+                <!-- Edit Button -->
+                <button type="button" class="modern-action-btn edit-action" (click)="editOrder(row)" title="Edit Order">
+                  <i class="ri-pencil-line"></i>
+                </button>
+
+                <!-- View Button -->
+                <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)"
+                  title="View Full Order Info">
+                  <i class="ri-eye-line"></i>
+                </button>
+
+                <!-- Delete Button -->
+                <button type="button" class="modern-action-btn delete-action" (click)="deleteOrder(row)"
+                  title="Delete Order">
+                  <i class="ri-delete-bin-line"></i>
+                </button>
+              </div>
+            </td>
+
+            <!-- 3. Date -->
+            <td class="date-cell">{{ row.date }}</td>
+
+            <!-- 4. Company Name (Red) -->
+            <td class="company-name-cell">{{ row.companyName }}</td>
+
+            <!-- 5. Product Name -->
+            <td class="product-name-cell">{{ row.productName }}</td>
+
+            <!-- 6. Qty -->
+            <td class="qty-cell font-bold">{{ row.qty | number }}</td>
+
+            <!-- 7. Priorities -->
+            <td>
+              <span class="priority-tag" [ngClass]="row.priority.toLowerCase()">
+                <i class="ri-fire-fill" *ngIf="row.priority === 'High'"></i>
+                <i class="ri-flashlight-fill" *ngIf="row.priority === 'Medium'"></i>
+                <i class="ri-checkbox-circle-fill" *ngIf="row.priority === 'Low'"></i>
+                <span>{{ row.priority }}</span>
+              </span>
+            </td>
+
+            <!-- 8. LASER PRINT -->
+            <td class="laser-print-cell font-mono">{{ row.laserPrint || '—' }}</td>
+
+            <!-- 9. Order Status -->
+            <td>
+              <span class="order-status-pill" [ngClass]="row.orderStatus.toLowerCase().replace(' ', '-')">
+                <span class="status-dot"></span>
+                <span>{{ row.orderStatus }}</span>
+              </span>
+            </td>
+
+            <!-- 10. Box (Green with Box, Purple Without Box) -->
+            <td>
+              <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'"
+                [class.without-box]="row.box === 'Without Box'">
+                <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
+                <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
+                <span>{{ row.box }}</span>
+              </span>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="filteredOrders.length === 0">
+            <td colspan="11" class="empty-table-cell">
+              <div class="empty-state-box">
+                <i class="ri-inbox-line"></i>
+                <p>No orders match the selected filters or date range.</p>
+                <button type="button" class="btn-cancel" (click)="resetFilters()">Clear Filters</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS VIEW (< 768px) -->
+    <div class="mobile-orders-cards-container">
+      <div *ngIf="filteredOrders.length === 0" class="empty-state-box">
+        <i class="ri-inbox-line"></i>
+        <p>No orders match the selected filters.</p>
+        <button type="button" class="btn-cancel" (click)="resetFilters()">Clear Filters</button>
+      </div>
+
+      <div *ngFor="let row of filteredOrders" class="order-mobile-card" [class.urgent-card]="row.priority === 'High'"
+        [class.recently-ranked]="recentlyMovedOrderId() === row.orderId">
+        <!-- Card Header -->
+        <div class="mobile-card-header">
+          <div class="id-date-meta">
+            <span class="rank-badge font-bold">#{{ row.srNo }}</span>
+            <span class="card-order-id font-bold">ID: {{ row.orderId }}</span>
+            <span class="card-date-badge"><i class="ri-calendar-line"></i> {{ row.date }}</span>
+          </div>
+
+          <div class="action-btn-group">
+            <button type="button" class="modern-action-btn move-btn" (click)="moveRankUp(row)" title="Move Rank Up">
+              <i class="ri-arrow-up-s-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn move-btn" (click)="moveRankDown(row)" title="Move Rank Down">
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn process-action" (click)="quickProcessOrder(row)"
+              title="Advance Status">
+              <span class="double-plus-icon">
+                <i class="ri-add-line"></i>
+                <i class="ri-add-line"></i>
+              </span>
+            </button>
+            <button type="button" class="modern-action-btn edit-action" (click)="editOrder(row)" title="Edit Order">
+              <i class="ri-pencil-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View Details">
+              <i class="ri-eye-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn delete-action" (click)="deleteOrder(row)"
+              title="Delete Order">
+              <i class="ri-delete-bin-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Company & Product -->
+        <div class="mobile-card-body">
+          <h4 class="card-company-name"><i class="ri-building-line text-red"></i> {{ row.companyName }}</h4>
+          <div class="card-product-name"><i class="ri-cpu-line text-muted"></i> {{ row.productName }}</div>
+        </div>
+
+        <!-- 4-Grid Meta -->
+        <div class="mobile-card-grid">
+          <div class="card-grid-item">
+            <span class="grid-item-label">Qty</span>
+            <span class="grid-item-val font-bold">{{ row.qty | number }}</span>
+          </div>
+
+          <div class="card-grid-item">
+            <span class="grid-item-label">Priority</span>
+            <span class="priority-tag" [ngClass]="row.priority.toLowerCase()">
+              <i class="ri-fire-fill" *ngIf="row.priority === 'High'"></i>
+              <i class="ri-flashlight-fill" *ngIf="row.priority === 'Medium'"></i>
+              <i class="ri-checkbox-circle-fill" *ngIf="row.priority === 'Low'"></i>
+              <span>{{ row.priority }}</span>
+            </span>
+          </div>
+
+          <div class="card-grid-item">
+            <span class="grid-item-label">Status</span>
+            <span class="order-status-pill" [ngClass]="row.orderStatus.toLowerCase().replace(' ', '-')">
+              <span class="status-dot"></span>
+              <span>{{ row.orderStatus }}</span>
+            </span>
+          </div>
+
+          <div class="card-grid-item">
+            <span class="grid-item-label">Packaging</span>
+            <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'"
+              [class.without-box]="row.box === 'Without Box'">
+              <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
+              <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
+              <span>{{ row.box }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Laser Print Footer -->
+        <div class="mobile-card-footer" *ngIf="row.laserPrint">
+          <span class="footer-lbl"><i class="ri-qr-code-line"></i> LASER PRINT:</span>
+          <span class="footer-val font-mono">{{ row.laserPrint }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================
+     MODAL 1: ADD / EDIT ORDER (DYNAMIC MASTER COMPANY & PRODUCTS)
+======================================================== -->
+<div class="modal-backdrop" *ngIf="showAddOrderModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-file-list-3-line text-red"></i>
+        <span>{{ selectedOrder() ? 'Edit Order #' + selectedOrder()?.orderId : 'Create New Order' }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showAddOrderModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- 1. Order Date -->
+      <div class="form-field">
+        <label class="field-label">Order Date *</label>
+        <div class="field-input-wrapper">
+          <i class="ri-calendar-line field-icon text-red" (click)="datePicker.showPicker?.()"></i>
+          <!-- [min]="minOrderDate" -->
+          <input #datePicker type="date" [(ngModel)]="newOrder.date" placeholder="YYYY-MM-DD" class="clean-input" />
+        </div>
+      </div>
+
+      <!-- 2. Company Name Select (Dynamic from CompanyService) -->
+      <div class="form-field">
+        <label class="field-label">Select Company Name *</label>
+        <div class="field-input-wrapper">
+          <i class="ri-building-line field-icon text-red"></i>
+          <select [(ngModel)]="newOrder.companyName" class="clean-input clean-select">
+            <option value="" disabled>-- Select Registered Company --</option>
+            <option *ngFor="let c of companyService.companies()" [value]="c.id">
+              {{ c.companyName }}
+              <!-- ({{ c.city }}) -->
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 3. Product Name (Dynamic from ProductService) -->
+      <div class="form-field">
+        <label class="field-label">Product Name *</label>
+        <div class="field-input-wrapper">
+          <i class="ri-cpu-line field-icon text-red"></i>
+          <select [(ngModel)]="newOrder.productName" class="clean-input clean-select">
+            <option value="" disabled>-- Select Registered Product --</option>
+            <option *ngFor="let p of productService.products()" [value]="p.id">
+              {{ p.name }}
+              <!-- ({{ p.code }}) -->
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 4. Qty, Priority, Box Grid -->
+      <div class="modal-grid-3">
+        <div class="form-field">
+          <label class="field-label">Quantity *</label>
+          <input type="number" [(ngModel)]="newOrder.qty" placeholder="100" class="clean-input font-bold" />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Priority *</label>
+          <select [(ngModel)]="newOrder.priority" class="clean-input clean-select">
+            <option value="High">🔥 High</option>
+            <option value="Medium">⚡ Medium</option>
+            <option value="Low">🟢 Low</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Packaging Box *</label>
+          <select [(ngModel)]="newOrder.box" class="clean-input clean-select">
+            <option value="With Box">📦 With Box</option>
+            <option value="Without Box">🚫 Without Box</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 5. Laser Print & Status -->
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label class="field-label">LASER PRINT Label</label>
+          <input type="text" [(ngModel)]="newOrder.laserPrint" placeholder="e.g. METEROR / BIOGREEN"
+            class="clean-input font-mono uppercase" />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Order Status *</label>
+          <select [(ngModel)]="newOrder.orderStatus" class="clean-input clean-select">
+            <option value="Process">🔴 Process</option>
+            <option value="Ready to Dispatch">🟡 Ready to Dispatch</option>
+            <option value="Dispatched">🟢 Dispatched</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showAddOrderModal.set(false)">Cancel</button>
+      <button type="button" class="top-add-btn" (click)="saveOrder()">
+        <i class="ri-save-line"></i>
+        <span>Save Order</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     MODAL 2: VIEW ORDER DETAILS
+======================================================== -->
+<div class="modal-backdrop" *ngIf="showViewOrderModal() && selectedOrder()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-eye-line text-red"></i>
+        <span>Order Details — #{{ selectedOrder()?.orderId }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showViewOrderModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedOrder() as ord">
+      <div class="details-view-grid">
+        <div class="view-item">
+          <span class="item-label">Order ID</span>
+          <span class="item-value font-bold text-red">#{{ ord.orderId }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Order Date</span>
+          <span class="item-value">{{ ord.date }}</span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Company Name</span>
+          <span class="item-value text-red font-bold">{{ ord.companyName }}</span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Product Model</span>
+          <span class="item-value font-bold">{{ ord.productName }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Quantity</span>
+          <span class="item-value font-bold">{{ ord.qty | number }} pcs</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Priority Tag</span>
+          <span class="item-value">
+            <span class="priority-tag" [ngClass]="ord.priority.toLowerCase()">
+              <i class="ri-fire-fill" *ngIf="ord.priority === 'High'"></i>
+              <i class="ri-flashlight-fill" *ngIf="ord.priority === 'Medium'"></i>
+              <i class="ri-checkbox-circle-fill" *ngIf="ord.priority === 'Low'"></i>
+              <span>{{ ord.priority }}</span>
+            </span>
+          </span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">LASER PRINT</span>
+          <span class="item-value font-mono">{{ ord.laserPrint || 'N/A' }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Order Status</span>
+          <span class="item-value">
+            <span class="order-status-pill" [ngClass]="ord.orderStatus.toLowerCase().replace(' ', '-')">
+              <span class="status-dot"></span>
+              <span>{{ ord.orderStatus }}</span>
+            </span>
+          </span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Packaging Box</span>
+          <span class="item-value font-bold">
+            <span class="box-badge-tag" [class.with-box]="ord.box === 'With Box'"
+              [class.without-box]="ord.box === 'Without Box'">
+              <i class="ri-box-3-line" *ngIf="ord.box === 'With Box'"></i>
+              <i class="ri-close-line" *ngIf="ord.box === 'Without Box'"></i>
+              <span>{{ ord.box }}</span>
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="top-add-btn" (click)="showViewOrderModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>

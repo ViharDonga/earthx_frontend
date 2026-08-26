@@ -1,0 +1,275 @@
+<div class="view-section">
+  <div class="data-table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-title-group">
+        <div class="title-with-badge">
+          <h3 class="toolbar-title">Product Master Catalog</h3>
+          <span class="active-count-badge">{{ filteredProducts.length }}</span>
+        </div>
+        <p class="toolbar-subtitle">Manage PCB controllers, models, and inventory pricing</p>
+      </div>
+
+      <div class="toolbar-actions-grid">
+        <!-- Category Filter -->
+        <div class="filter-field-group">
+          <label class="filter-label"><i class="ri-folder-2-line text-amber"></i> Category:</label>
+          <select class="filter-select" [(ngModel)]="selectedCategory">
+            <option value="All">All Categories</option>
+            <option *ngFor="let cat of productService.categories" [value]="cat">{{ cat }}</option>
+          </select>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+          <input type="text" placeholder="Search Code, Product, HSN..." [(ngModel)]="searchQuery" />
+        </div>
+
+        <button type="button" class="top-add-btn" (click)="openAddProduct()">
+          <i class="ri-add-line"></i>
+          <span>Add Product</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-scroll-container desktop-table-view">
+      <table class="earthx-table exact-theme-table">
+        <thead>
+          <tr>
+            <th style="width: 120px;">Model Code</th>
+            <th>Product Description</th>
+            <th>Category</th>
+            <!-- <th>HSN Code</th> -->
+            <th>Unit Price</th>
+            <th>Stock Available</th>
+            <th style="width: 120px;">Status</th>
+            <th style="width: 120px; text-align: center;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let prod of filteredProducts">
+            <td class="font-mono font-bold text-red">{{ prod.code }}</td>
+            <td class="font-bold">
+              <i class="ri-cpu-line text-red"></i> {{ prod.name }}
+            </td>
+            <td><span class="category-badge">{{ prod.category }}</span></td>
+            <!-- <td class="font-mono text-muted">{{ prod.hsn }}</td> -->
+            <td class="font-bold">₹{{ prod.unitPrice }}</td>
+            <td class="font-bold">{{ prod.unit }} units</td>
+            <td>
+              <span class="order-status-pill" [class.dispatched]="prod.status === 'Active'"
+                [class.process]="prod.status === 'IN Active'">
+                <span class="status-dot"></span>
+                <span>{{ prod.status }}</span>
+              </span>
+            </td>
+            <td class="action-cell">
+              <div class="action-btn-group">
+                <button type="button" class="modern-action-btn edit-action" (click)="editProduct(prod)"
+                  title="Edit Product">
+                  <i class="ri-pencil-line"></i>
+                </button>
+                <button type="button" class="modern-action-btn view-action" (click)="viewProduct(prod)"
+                  title="View Details">
+                  <i class="ri-eye-line"></i>
+                </button>
+                <button type="button" class="modern-action-btn delete-action" (click)="deleteProduct(prod)"
+                  title="Delete Product">
+                  <i class="ri-delete-bin-line"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="filteredProducts.length === 0">
+            <td colspan="8" class="empty-table-cell">
+              <div class="empty-state-box">
+                <i class="ri-cpu-line"></i>
+                <p>No products found matching search.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+    <div class="mobile-orders-cards-container">
+      <div *ngIf="filteredProducts.length === 0" class="empty-state-box">
+        <i class="ri-cpu-line"></i>
+        <p>No products found.</p>
+      </div>
+
+      <div *ngFor="let prod of filteredProducts" class="order-mobile-card">
+        <div class="mobile-card-header">
+          <span class="card-order-id font-mono font-bold text-red">{{ prod.code }}</span>
+          <div class="action-btn-group">
+            <button type="button" class="modern-action-btn edit-action" (click)="editProduct(prod)"
+              title="Edit Product">
+              <i class="ri-pencil-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn view-action" (click)="viewProduct(prod)"
+              title="View Details">
+              <i class="ri-eye-line"></i>
+            </button>
+            <button type="button" class="modern-action-btn delete-action" (click)="deleteProduct(prod)"
+              title="Delete Product">
+              <i class="ri-delete-bin-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-card-body">
+          <h4 class="card-company-name" style="color: var(--text-main); font-size: 13.5px;">
+            <i class="ri-cpu-line text-red"></i> {{ prod.name }}
+          </h4>
+          <div class="card-product-name"><span class="category-badge">{{ prod.category }}</span></div>
+        </div>
+
+        <div class="mobile-card-grid">
+          <div class="card-grid-item">
+            <span class="grid-item-label">Unit Price</span>
+            <span class="grid-item-val font-bold">₹{{ prod.unitPrice }}</span>
+          </div>
+          <div class="card-grid-item">
+            <span class="grid-item-label">Stock</span>
+            <span class="grid-item-val font-bold">{{ prod.unit }} units</span>
+          </div>
+        </div>
+
+        <!-- <div class="mobile-card-footer">
+          <span class="footer-lbl">HSN:</span>
+          <span class="footer-val font-mono">{{ prod.hsn }}</span>
+        </div> -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================
+     ADD / EDIT PRODUCT POPUP MODAL
+======================================================== -->
+<div class="modal-backdrop" *ngIf="showAddProductModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-cpu-line text-red"></i>
+        <span>{{ selectedProduct() ? 'Edit Product (' + selectedProduct()?.code + ')' : 'Add New Product Master'
+          }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showAddProductModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label class="field-label">Model / Product Code *</label>
+          <input type="text" [(ngModel)]="newProduct.code" [disabled]="!!selectedProduct()" placeholder="e.g. EX-SMP-08"
+            class="clean-input font-mono font-bold" />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Category *</label>
+          <select [(ngModel)]="newProduct.category" class="clean-input clean-select">
+            <option *ngFor="let cat of productService.categories" [value]="cat">{{ cat }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Product Name / Description *</label>
+        <input type="text" [(ngModel)]="newProduct.name" placeholder="e.g. RO SMPS - 36V 3.0A High Efficiency"
+          class="clean-input" />
+      </div>
+
+      <div class="modal-grid-3">
+        <!-- <div class="form-field">
+          <label class="field-label">HSN Code *</label>
+          <input type="text" [(ngModel)]="newProduct.hsn" placeholder="85044090" class="clean-input font-mono" />
+        </div> -->
+
+        <div class="form-field">
+          <label class="field-label">Unit Price (₹) *</label>
+          <input type="number" [(ngModel)]="newProduct.unitPrice" placeholder="500" class="clean-input font-bold" />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Initial Stock *</label>
+          <input type="number" [(ngModel)]="newProduct.unit" placeholder="100" class="clean-input font-bold" />
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Status *</label>
+        <select [(ngModel)]="newProduct.status" class="clean-input clean-select">
+          <option value="Active">🟢 Active</option>
+          <option value="IN Active">🔴 IN Active</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showAddProductModal.set(false)">Cancel</button>
+      <button type="button" class="top-add-btn" (click)="saveProduct()">
+        <i class="ri-save-line"></i>
+        <span>{{ selectedProduct() ? 'Update Product' : 'Save Product' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW PRODUCT DETAILS MODAL -->
+<div class="modal-backdrop" *ngIf="showViewProductModal() && selectedProduct()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-cpu-line text-red"></i>
+        <span>Product Details — {{ selectedProduct()?.name }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showViewProductModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedProduct() as prod">
+      <div class="details-view-grid">
+        <div class="view-item">
+          <span class="item-label">Model Code</span>
+          <span class="item-value font-bold font-mono text-red">{{ prod.code }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Status</span>
+          <span class="item-value font-bold text-green">{{ prod.status }}</span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Product Name</span>
+          <span class="item-value font-bold">{{ prod.name }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Category</span>
+          <span class="item-value"><span class="category-badge">{{ prod.category }}</span></span>
+        </div>
+        <!-- <div class="view-item">
+          <span class="item-label">HSN Code</span>
+          <span class="item-value font-mono">{{ prod.hsn }}</span>
+        </div> -->
+        <div class="view-item">
+          <span class="item-label">Unit Price</span>
+          <span class="item-value font-bold text-red">₹{{ prod.unitPrice }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Available Stock</span>
+          <span class="item-value font-bold">{{ prod.unit }} units</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="top-add-btn" (click)="showViewProductModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>
