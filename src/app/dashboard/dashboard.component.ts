@@ -9,6 +9,7 @@ import { CompanyService } from '../services/company.service';
 import { ProductService } from '../services/product.service';
 import { OrderListComponent } from '../orders/order-list/order-list.component';
 import { DispatchListComponent } from '../orders/dispatch-list/dispatch-list.component';
+import { DeletedOrdersComponent } from '../orders/deleted-orders/deleted-orders.component';
 import { CompanyMasterComponent } from '../master/company-master/company-master.component';
 import { ProductMasterComponent } from '../master/product-master/product-master.component';
 
@@ -20,6 +21,7 @@ import { ProductMasterComponent } from '../master/product-master/product-master.
     FormsModule,
     OrderListComponent,
     DispatchListComponent,
+    DeletedOrdersComponent,
     CompanyMasterComponent,
     ProductMasterComponent
   ],
@@ -31,8 +33,8 @@ export class DashboardComponent implements OnInit {
   @ViewChild(CompanyMasterComponent) companyMasterRef?: CompanyMasterComponent;
   @ViewChild(ProductMasterComponent) productMasterRef?: ProductMasterComponent;
 
-  // Active module view: 'orders-list' | 'orders-dispatch' | 'master-company' | 'master-product'
-  activeView = signal<'orders-list' | 'orders-dispatch' | 'master-company' | 'master-product'>('orders-list');
+  // Active module view: 'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product'
+  activeView = signal<'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product'>('orders-list');
 
   // Sidebar open / collapsed state
   isSidebarOpen = signal<boolean>(true);
@@ -41,8 +43,26 @@ export class DashboardComponent implements OnInit {
   isOrderMenuOpen = signal<boolean>(true);
   isMasterMenuOpen = signal<boolean>(true);
 
+  get activeOrderCount(): number {
+    return this.orderService.orders().filter(o => 
+      (o.order_status === 'OPEN' || !o.order_status) && 
+      o.orderStatus !== 'Dispatched' && 
+      o.order_status !== 'CLOSE' && 
+      o.order_status !== 'DELETED'
+    ).length;
+  }
+
   get dispatchCount(): number {
-    return this.orderService.orders().filter(o => o.orderStatus === 'Ready to Dispatch' || o.orderStatus === 'Dispatched').length;
+    return this.orderService.orders().filter(o => 
+      (o.order_status === 'CLOSE' || o.orderStatus === 'Dispatched') && 
+      o.order_status !== 'DELETED'
+    ).length;
+  }
+
+  get deletedOrderCount(): number {
+    return this.orderService.orders().filter(o => 
+      o.order_status === 'DELETED' || o.order_status === 'DELETE'
+    ).length;
   }
 
   constructor(
@@ -78,7 +98,7 @@ export class DashboardComponent implements OnInit {
     this.isSidebarOpen.update(v => !v);
   }
 
-  selectMenuItem(view: 'orders-list' | 'orders-dispatch' | 'master-company' | 'master-product') {
+  selectMenuItem(view: 'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product') {
     this.activeView.set(view);
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isSidebarOpen.set(false);

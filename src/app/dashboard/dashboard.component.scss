@@ -319,9 +319,21 @@
     margin-left: auto;
 
     &.dispatch-badge {
+      background: var(--amber-tint);
+      color: var(--amber-status);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    &.closed-badge {
       background: var(--green-tint);
       color: var(--green-status);
       border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    &.deleted-badge {
+      background: var(--red-tint);
+      color: var(--red-status);
+      border-color: rgba(239, 68, 68, 0.3);
     }
   }
 

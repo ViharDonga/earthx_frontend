@@ -103,7 +103,6 @@ export class CompanyMasterComponent {
         ...this.newCompany as CompanyItem,
         id: this.selectedCompany()!.id
       });
-      this.toast.showToast('success', 'Company Updated', `Company "${this.newCompany.companyName}" updated successfully!`);
     } else {
       this.companyService.addCompany(this.newCompany);
 

@@ -6,13 +6,27 @@
       <div class="toolbar-title-group">
         <div class="title-with-badge">
           <h3 class="toolbar-title">Orders Register</h3>
-          <span class="active-count-badge">{{ filteredOrders.length }} / {{ orderService.orders().length }}</span>
+          <span class="active-count-badge">{{ filteredOrders.length }} / {{ nonDispatchedOrders.length }}</span>
         </div>
 
-        <button type="button" class="top-add-btn" (click)="openAddOrder()">
-          <i class="ri-add-line"></i>
-          <span>Add Order</span>
-        </button>
+        <div class="toolbar-btn-group">
+          <!-- EXCEL EXPORT BUTTON -->
+          <button type="button" class="export-btn excel-btn" (click)="exportExcel()" title="Export to Excel (.xlsx)">
+            <i class="ri-file-excel-2-line"></i>
+            <span>Excel</span>
+          </button>
+
+          <!-- PDF EXPORT BUTTON -->
+          <button type="button" class="export-btn pdf-btn" (click)="exportPdf()" title="Download PDF Report">
+            <i class="ri-file-pdf-2-line"></i>
+            <span>PDF</span>
+          </button>
+
+          <button type="button" class="top-add-btn" (click)="openAddOrder()">
+            <i class="ri-add-line"></i>
+            <span>Add Order</span>
+          </button>
+        </div>
       </div>
 
       <!-- Advanced Filter Grid (Date, Box, Priority, Status, Company, Search) -->
@@ -57,7 +71,6 @@
             <option value="All">All Active (Process & Ready)</option>
             <option value="Process">🔴 Process</option>
             <option value="Ready to Dispatch">🟡 Ready to Dispatch</option>
-            <option value="Dispatched">🟢 Dispatched</option>
           </select>
         </div>
 
@@ -101,7 +114,7 @@
             <th style="width: 80px;">Qty</th>
             <th style="width: 120px;">Priorities <i class="ri-arrow-down-line"></i></th>
             <th>LASER PRINT</th>
-            <th style="width: 160px;">Order Status</th>
+            <th style="width: 150px;">Process Status</th>
             <th style="width: 130px;">Box</th>
           </tr>
         </thead>
@@ -133,16 +146,17 @@
             <!-- 1. Order Id -->
             <td class="font-bold text-dark-bold">{{ row.orderId }}</td>
 
-            <!-- 2. Action Column (Double Plus Process, Edit, View, Delete) -->
+            <!-- 2. Action Column (Ready to Dispatch / Dispatch Process, Edit, View, Delete) -->
             <td class="action-cell">
               <div class="action-btn-group">
-                <!-- Double Plus Quick Process Button -->
-                <button type="button" class="modern-action-btn process-action" (click)="quickProcessOrder(row)"
-                  [title]="'Advance Status from ' + row.orderStatus">
-                  <span class="double-plus-icon">
-                    <i class="ri-add-line"></i>
-                    <i class="ri-add-line"></i>
-                  </span>
+                <!-- Quick Process Button (Truck for Process -> Ready, Send for Ready -> Dispatched) -->
+                <button type="button" class="modern-action-btn process-action"
+                  [ngClass]="{'ready-action': row.orderStatus === 'Process', 'dispatch-action': row.orderStatus === 'Ready to Dispatch', 'completed-action': row.orderStatus === 'Dispatched'}"
+                  (click)="quickProcessOrder(row)"
+                  [title]="row.orderStatus === 'Process' ? 'Move to Ready to Dispatch' : (row.orderStatus === 'Ready to Dispatch' ? 'Mark as Dispatched' : 'Dispatched')">
+                  <i class="ri-truck-line" *ngIf="row.orderStatus === 'Process'"></i>
+                  <i class="ri-send-plane-fill" *ngIf="row.orderStatus === 'Ready to Dispatch'"></i>
+                  <i class="ri-checkbox-circle-fill" *ngIf="row.orderStatus === 'Dispatched'"></i>
                 </button>
 
                 <!-- Edit Button -->
@@ -156,8 +170,8 @@
                   <i class="ri-eye-line"></i>
                 </button>
 
-                <!-- Delete Button -->
-                <button type="button" class="modern-action-btn delete-action" (click)="deleteOrder(row)"
+                <!-- Delete Button (Super User Only) -->
+                <button *ngIf="authService.currentUser().role === 'super-user'" type="button" class="modern-action-btn delete-action" (click)="deleteOrder(row)"
                   title="Delete Order">
                   <i class="ri-delete-bin-line"></i>
                 </button>
@@ -189,7 +203,7 @@
             <!-- 8. LASER PRINT -->
             <td class="laser-print-cell font-mono">{{ row.laserPrint || '—' }}</td>
 
-            <!-- 9. Order Status -->
+            <!-- 9. Process Status -->
             <td>
               <span class="order-status-pill" [ngClass]="row.orderStatus.toLowerCase().replace(' ', '-')">
                 <span class="status-dot"></span>
@@ -197,7 +211,7 @@
               </span>
             </td>
 
-            <!-- 10. Box (Green with Box, Purple Without Box) -->
+            <!-- 11. Box (Green with Box, Purple Without Box) -->
             <td>
               <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'"
                 [class.without-box]="row.box === 'Without Box'">
@@ -210,7 +224,7 @@
 
           <!-- Empty State -->
           <tr *ngIf="filteredOrders.length === 0">
-            <td colspan="11" class="empty-table-cell">
+            <td colspan="12" class="empty-table-cell">
               <div class="empty-state-box">
                 <i class="ri-inbox-line"></i>
                 <p>No orders match the selected filters or date range.</p>
@@ -247,12 +261,13 @@
             <button type="button" class="modern-action-btn move-btn" (click)="moveRankDown(row)" title="Move Rank Down">
               <i class="ri-arrow-down-s-line"></i>
             </button>
-            <button type="button" class="modern-action-btn process-action" (click)="quickProcessOrder(row)"
-              title="Advance Status">
-              <span class="double-plus-icon">
-                <i class="ri-add-line"></i>
-                <i class="ri-add-line"></i>
-              </span>
+            <button type="button" class="modern-action-btn process-action"
+              [ngClass]="{'ready-action': row.orderStatus === 'Process', 'dispatch-action': row.orderStatus === 'Ready to Dispatch', 'completed-action': row.orderStatus === 'Dispatched'}"
+              (click)="quickProcessOrder(row)"
+              [title]="row.orderStatus === 'Process' ? 'Move to Ready to Dispatch' : (row.orderStatus === 'Ready to Dispatch' ? 'Mark as Dispatched' : 'Dispatched')">
+              <i class="ri-truck-line" *ngIf="row.orderStatus === 'Process'"></i>
+              <i class="ri-send-plane-fill" *ngIf="row.orderStatus === 'Ready to Dispatch'"></i>
+              <i class="ri-checkbox-circle-fill" *ngIf="row.orderStatus === 'Dispatched'"></i>
             </button>
             <button type="button" class="modern-action-btn edit-action" (click)="editOrder(row)" title="Edit Order">
               <i class="ri-pencil-line"></i>
@@ -260,7 +275,7 @@
             <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View Details">
               <i class="ri-eye-line"></i>
             </button>
-            <button type="button" class="modern-action-btn delete-action" (click)="deleteOrder(row)"
+            <button *ngIf="authService.currentUser().role === 'super-user'" type="button" class="modern-action-btn delete-action" (click)="deleteOrder(row)"
               title="Delete Order">
               <i class="ri-delete-bin-line"></i>
             </button>
@@ -351,11 +366,10 @@
         <label class="field-label">Select Company Name *</label>
         <div class="field-input-wrapper">
           <i class="ri-building-line field-icon text-red"></i>
-          <select [(ngModel)]="newOrder.companyName" class="clean-input clean-select">
-            <option value="" disabled>-- Select Registered Company --</option>
-            <option *ngFor="let c of companyService.companies()" [value]="c.id">
+          <select [(ngModel)]="newOrder.companyId" (ngModelChange)="onCompanySelectChange()" class="clean-input clean-select">
+            <option [ngValue]="undefined" disabled>-- Select Active Company --</option>
+            <option *ngFor="let c of activeCompanies" [ngValue]="c.id">
               {{ c.companyName }}
-              <!-- ({{ c.city }}) -->
             </option>
           </select>
         </div>
@@ -366,11 +380,10 @@
         <label class="field-label">Product Name *</label>
         <div class="field-input-wrapper">
           <i class="ri-cpu-line field-icon text-red"></i>
-          <select [(ngModel)]="newOrder.productName" class="clean-input clean-select">
-            <option value="" disabled>-- Select Registered Product --</option>
-            <option *ngFor="let p of productService.products()" [value]="p.id">
+          <select [(ngModel)]="newOrder.productId" class="clean-input clean-select">
+            <option [ngValue]="undefined" disabled>-- Select Active Product --</option>
+            <option *ngFor="let p of activeProducts" [ngValue]="p.id">
               {{ p.name }}
-              <!-- ({{ p.code }}) -->
             </option>
           </select>
         </div>
@@ -485,6 +498,15 @@
         <div class="view-item">
           <span class="item-label">Order Status</span>
           <span class="item-value">
+            <span class="order-open-tag font-bold">
+              <i class="ri-checkbox-circle-fill"></i>
+              <span>{{ ord.order_status || 'OPEN' }}</span>
+            </span>
+          </span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Process Status</span>
+          <span class="item-value">
             <span class="order-status-pill" [ngClass]="ord.orderStatus.toLowerCase().replace(' ', '-')">
               <span class="status-dot"></span>
               <span>{{ ord.orderStatus }}</span>
@@ -500,6 +522,18 @@
               <i class="ri-close-line" *ngIf="ord.box === 'Without Box'"></i>
               <span>{{ ord.box }}</span>
             </span>
+          </span>
+        </div>
+        <div class="view-item full-col" *ngIf="ord.addl_attr?.readyToDispatch">
+          <span class="item-label">Ready To Dispatch Audit</span>
+          <span class="item-value font-mono">
+            <i class="ri-truck-line text-amber"></i> {{ ord.addl_attr.readyToDispatch.userName }} on {{ ord.addl_attr.readyToDispatch.date }}
+          </span>
+        </div>
+        <div class="view-item full-col" *ngIf="ord.addl_attr?.dispatched">
+          <span class="item-label">Dispatch Audit</span>
+          <span class="item-value font-mono">
+            <i class="ri-send-plane-fill text-green"></i> {{ ord.addl_attr.dispatched.userName }} on {{ ord.addl_attr.dispatched.date }}
           </span>
         </div>
       </div>

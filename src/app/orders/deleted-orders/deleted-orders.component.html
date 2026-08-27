@@ -3,45 +3,14 @@
     <div class="table-toolbar">
       <div class="toolbar-title-group">
         <div class="title-with-badge">
-          <h3 class="toolbar-title">Dispatched Orders Register</h3>
-          <span class="active-count-badge dispatch-count">{{ dispatchOrders.length }}</span>
+          <h3 class="toolbar-title">Deleted Orders Register</h3>
+          <span class="active-count-badge deleted-count">{{ deletedOrders.length }}</span>
         </div>
-
-        <div class="toolbar-btn-group">
-          <!-- EXCEL EXPORT BUTTON -->
-          <button type="button" class="export-btn excel-btn" (click)="exportExcel()" title="Export to Excel (.xlsx)">
-            <i class="ri-file-excel-2-line"></i>
-            <span>Excel</span>
-          </button>
-
-          <!-- PDF EXPORT BUTTON -->
-          <button type="button" class="export-btn pdf-btn" (click)="exportPdf()" title="Download PDF Report">
-            <i class="ri-file-pdf-2-line"></i>
-            <span>PDF</span>
-          </button>
-        </div>
+        <p class="toolbar-subtitle">Soft-deleted order archive</p>
       </div>
-
+      
       <div class="toolbar-actions-grid">
-        <!-- 1. DATE FROM -->
-        <div class="filter-field-group">
-          <label class="filter-label"><i class="ri-calendar-event-line text-red"></i> From:</label>
-          <input type="date" class="filter-date-input" [(ngModel)]="filterDateFrom" title="Filter Date From" />
-        </div>
-
-        <!-- 2. DATE TO -->
-        <div class="filter-field-group">
-          <label class="filter-label"><i class="ri-calendar-check-line text-red"></i> To:</label>
-          <input type="date" class="filter-date-input" [(ngModel)]="filterDateTo" title="Filter Date To" />
-        </div>
-
-        <!-- 3. THIS MONTH BUTTON -->
-        <button type="button" class="export-btn" style="background: var(--bg-input); border-color: var(--border-color); color: var(--text-main);" (click)="setCurrentMonthFilter()" title="Reset to Current Month">
-          <i class="ri-calendar-line text-red"></i>
-          <span>This Month</span>
-        </button>
-
-        <!-- 4. COMPANY NAME DROPDOWN FILTER -->
+        <!-- COMPANY NAME DROPDOWN FILTER -->
         <div class="filter-field-group company-filter-group">
           <label class="filter-label"><i class="ri-building-line text-red"></i> Company:</label>
           <select class="filter-select company-select" [(ngModel)]="selectedCompanyFilter">
@@ -50,10 +19,9 @@
           </select>
         </div>
 
-        <!-- 5. SEARCH BOX -->
         <div class="search-box">
           <i class="ri-search-line"></i>
-          <input type="text" placeholder="Search dispatched orders..." [(ngModel)]="searchQuery" />
+          <input type="text" placeholder="Search deleted orders..." [(ngModel)]="searchQuery" />
         </div>
       </div>
     </div>
@@ -76,13 +44,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of dispatchOrders">
+          <tr *ngFor="let row of deletedOrders">
             <td class="font-bold text-dark-bold">{{ row.orderId }}</td>
 
             <td class="action-cell">
               <div class="action-btn-group">
-                <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)"
-                  title="View Details">
+                <!-- ONLY View Icon in Action Column -->
+                <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View Details">
                   <i class="ri-eye-line"></i>
                 </button>
               </div>
@@ -105,15 +73,14 @@
             <td class="laser-print-cell font-mono">{{ row.laserPrint || '—' }}</td>
 
             <td>
-              <span class="order-status-pill dispatched">
+              <span class="order-status-pill process">
                 <span class="status-dot"></span>
-                <span>CLOSE</span>
+                <span>DELETED</span>
               </span>
             </td>
 
             <td>
-              <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'"
-                [class.without-box]="row.box === 'Without Box'">
+              <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'" [class.without-box]="row.box === 'Without Box'">
                 <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
                 <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
                 <span>{{ row.box }}</span>
@@ -121,11 +88,11 @@
             </td>
           </tr>
 
-          <tr *ngIf="dispatchOrders.length === 0">
+          <tr *ngIf="deletedOrders.length === 0">
             <td colspan="10" class="empty-table-cell">
               <div class="empty-state-box">
-                <i class="ri-truck-line"></i>
-                <p>No dispatched orders found matching criteria.</p>
+                <i class="ri-delete-bin-line"></i>
+                <p>No deleted orders found matching criteria.</p>
               </div>
             </td>
           </tr>
@@ -135,18 +102,19 @@
 
     <!-- MOBILE CARDS -->
     <div class="mobile-orders-cards-container">
-      <div *ngIf="dispatchOrders.length === 0" class="empty-state-box">
-        <i class="ri-truck-line"></i>
-        <p>No dispatched orders found.</p>
+      <div *ngIf="deletedOrders.length === 0" class="empty-state-box">
+        <i class="ri-delete-bin-line"></i>
+        <p>No deleted orders found.</p>
       </div>
 
-      <div *ngFor="let row of dispatchOrders" class="order-mobile-card">
+      <div *ngFor="let row of deletedOrders" class="order-mobile-card">
         <div class="mobile-card-header">
           <div class="id-date-meta">
             <span class="card-order-id font-bold">#{{ row.orderId }}</span>
             <span class="card-date-badge"><i class="ri-calendar-line"></i> {{ row.date }}</span>
           </div>
           <div class="action-btn-group">
+            <!-- ONLY View Button -->
             <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View">
               <i class="ri-eye-line"></i>
             </button>
@@ -172,15 +140,14 @@
           </div>
           <div class="card-grid-item">
             <span class="grid-item-label">Status</span>
-            <span class="order-status-pill" [ngClass]="row.orderStatus.toLowerCase().replace(' ', '-')">
+            <span class="order-status-pill process">
               <span class="status-dot"></span>
-              <span>{{ row.orderStatus }}</span>
+              <span>DELETED</span>
             </span>
           </div>
           <div class="card-grid-item">
             <span class="grid-item-label">Packaging</span>
-            <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'"
-              [class.without-box]="row.box === 'Without Box'">
+            <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'" [class.without-box]="row.box === 'Without Box'">
               <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
               <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
               <span>{{ row.box }}</span>
@@ -203,7 +170,7 @@
     <div class="modal-header">
       <h3 class="modal-title">
         <i class="ri-eye-line text-red"></i>
-        <span>Dispatch Details — #{{ selectedOrder()?.orderId }}</span>
+        <span>Deleted Order Details — #{{ selectedOrder()?.orderId }}</span>
       </h3>
       <button type="button" class="modal-close" (click)="showViewOrderModal.set(false)">
         <i class="ri-close-line"></i>
@@ -235,26 +202,24 @@
         <div class="view-item">
           <span class="item-label">Order Status</span>
           <span class="item-value">
-            <span class="order-status-pill" [ngClass]="ord.orderStatus.toLowerCase().replace(' ', '-')">
+            <span class="order-status-pill process">
               <span class="status-dot"></span>
-              <span>{{ ord.orderStatus }}</span>
+              <span>DELETED</span>
             </span>
           </span>
         </div>
-        <!-- <div class="view-item full-col" *ngIf="ord.addl_attr?.readyToDispatch">
+        <div class="view-item full-col" *ngIf="ord.addl_attr?.readyToDispatch">
           <span class="item-label">Ready To Dispatch Audit</span>
           <span class="item-value font-mono">
-            <i class="ri-truck-line text-amber"></i> {{ ord.addl_attr.readyToDispatch.userName }} on {{
-            ord.addl_attr.readyToDispatch.date }}
+            <i class="ri-truck-line text-amber"></i> {{ ord.addl_attr.readyToDispatch.userName }} on {{ ord.addl_attr.readyToDispatch.date }}
           </span>
         </div>
         <div class="view-item full-col" *ngIf="ord.addl_attr?.dispatched">
           <span class="item-label">Dispatch Audit</span>
           <span class="item-value font-mono">
-            <i class="ri-send-plane-fill text-green"></i> {{ ord.addl_attr.dispatched.userName }} on {{
-            ord.addl_attr.dispatched.date }}
+            <i class="ri-send-plane-fill text-green"></i> {{ ord.addl_attr.dispatched.userName }} on {{ ord.addl_attr.dispatched.date }}
           </span>
-        </div> -->
+        </div>
       </div>
     </div>
 

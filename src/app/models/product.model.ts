@@ -5,5 +5,8 @@ export interface ProductMaster {
   category: string;
   unitPrice: number;
   unit: number;
-  status: 'Active' | 'IN Active';
+  status: 'Active' | 'Inactive' | 'Inactive' | string;
+  companyId?: number;
+  company?: any;
+  isActive?: boolean;
 }

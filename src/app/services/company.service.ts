@@ -78,6 +78,8 @@ export class CompanyService {
 
     this.http.patch(`${this.apiUrl}/companies/${company.id}`, payload).subscribe({
       next: () => {
+        this.commonSvc.showToast('success', 'Company Updated', `Company "${company.companyName}" updated successfully!`);
+
         this.fetchCompanies();
       },
       error: (err) => {

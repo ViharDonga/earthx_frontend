@@ -5,6 +5,7 @@ export interface CompanyItem {
   phone: string;
   city: string;
   gstNumber: string;
-  status: 'Active' | 'Inactive';
-  email: string
+  status: 'Active' | 'Inactive' | string;
+  email: string;
+  isActive?: boolean;
 }

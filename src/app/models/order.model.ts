@@ -12,4 +12,7 @@ export interface OrderItem {
   laserPrint: string;
   orderStatus: 'Process' | 'Ready to Dispatch' | 'Dispatched';
   box: 'With Box' | 'Without Box';
+  order_status?: 'OPEN' | 'CLOSE' | string;
+  addl_attr?: any;
 }
+

@@ -5,6 +5,7 @@ import { CompanyService } from './company.service';
 import { environment } from '../../environments/environment';
 import { CommonService } from './common.service';
 import { ProductService } from './product.service';
+import { AuthService } from './auth.service';
 
 const INITIAL_ORDERS: [] = [];
 
@@ -26,7 +27,8 @@ export class OrderService {
     private http: HttpClient,
     private companyService: CompanyService,
     private commonSvc: CommonService,
-    private productService: ProductService
+    private productService: ProductService,
+    private authService: AuthService
   ) {
     this.fetchOrders();
   }
@@ -42,53 +44,66 @@ export class OrderService {
     }, 3500);
   }
 
+  // Map backend order response to OrderItem
+  mapBackendOrders(res: any[]): OrderItem[] {
+    if (!res || res.length === 0) return [];
+    // Sort by rank ascending, then id ascending
+    const sorted = [...res].sort((a, b) => (a.rank || 0) - (b.rank || 0) || (a.id || 0) - (b.id || 0));
+    return sorted.map((o, idx) => {
+      const rawDate = o.createdAt ? new Date(o.createdAt) : new Date();
+      const dateStr = `${rawDate.getDate()}/${rawDate.getMonth() + 1}/${rawDate.getFullYear()}`;
+
+      let laserPrint = '';
+      let box: 'With Box' | 'Without Box' = 'With Box';
+      if (o.notes) {
+        const laserMatch = o.notes.match(/Laser:\s*([^;]+)/i);
+        if (laserMatch) laserPrint = laserMatch[1].trim();
+        else if (!o.notes.includes('Box:')) laserPrint = o.notes.trim();
+
+        if (o.notes.includes('Without Box')) box = 'Without Box';
+      }
+
+      let orderStatus: 'Process' | 'Ready to Dispatch' | 'Dispatched' = 'Process';
+      if (o.process === 'READY_TO_DISPATCH' || o.process === 'Ready to Dispatch') orderStatus = 'Ready to Dispatch';
+      else if (o.process === 'DISPATCHED' || o.process === 'Dispatched') orderStatus = 'Dispatched';
+      else orderStatus = 'Process';
+
+      let priority: 'High' | 'Medium' | 'Low' | 'Urgent' = 'Medium';
+      if (o.priority === 'HIGH') priority = 'High';
+      else if (o.priority === 'LOW') priority = 'Low';
+      else if (o.priority === 'URGENT') priority = 'Urgent';
+
+      const companyId = o.companyId || (o.company && o.company.id);
+      const companyName = o.company?.name || o.company?.companyName || o.customerName || '-';
+      const productId = o.productId || (o.product && o.product.id);
+      const productName = o.product?.name || o.productName || '-';
+
+      return {
+        id: o.id,
+        srNo: o.rank || idx + 1,
+        orderId: o.orderNumber || String(o.id),
+        date: dateStr,
+        companyId,
+        companyName,
+        productId,
+        productName,
+        qty: Number(o.quantity) || 100,
+        priority,
+        laserPrint: laserPrint || '-',
+        orderStatus,
+        box,
+        order_status: o.order_status || 'OPEN',
+        addl_attr: o.addl_attr || {}
+      };
+    });
+  }
+
   fetchOrders() {
     this.isLoading.set(true);
     this.http.get<any[]>(`${this.apiUrl}/orders`).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        if (res && res.length > 0) {
-          // Sort by rank
-          const sorted = [...res].sort((a, b) => (a.rank || 0) - (b.rank || 0));
-          const mapped: OrderItem[] = sorted.map((o, idx) => {
-            const rawDate = o.createdAt ? new Date(o.createdAt) : new Date();
-            const dateStr = `${rawDate.getDate()}/${rawDate.getMonth() + 1}/${rawDate.getFullYear()}`;
-
-            let laserPrint = '';
-            let box: 'With Box' | 'Without Box' = 'With Box';
-            if (o.notes) {
-              const laserMatch = o.notes.match(/Laser:\s*([^;]+)/i);
-              if (laserMatch) laserPrint = laserMatch[1].trim();
-              if (o.notes.includes('Without Box')) box = 'Without Box';
-            }
-
-            let orderStatus: 'Process' | 'Ready to Dispatch' | 'Dispatched' = 'Process';
-            if (o.status === 'READY_TO_DISPATCH') orderStatus = 'Ready to Dispatch';
-            else if (o.status === 'DISPATCHED') orderStatus = 'Dispatched';
-            else orderStatus = 'Process';
-
-            let priority: 'High' | 'Medium' | 'Low' | 'Urgent' = 'Medium';
-            if (o.priority === 'HIGH') priority = 'High';
-            else if (o.priority === 'LOW') priority = 'Low';
-            else if (o.priority === 'URGENT') priority = 'Urgent';
-
-            return {
-              id: o.id,
-              srNo: o.rank || idx + 1,
-              orderId: o.orderNumber || String(o.id),
-              date: dateStr,
-              companyId: o.companyId,
-              companyName: o.company?.name || o.customerName || '-',
-              productName: o.productName || o.product?.name || '-',
-              qty: Number(o.quantity) || 100,
-              priority,
-              laserPrint: laserPrint || '-',
-              orderStatus,
-              box
-            };
-          });
-          this.orders.set(mapped);
-        }
+        this.orders.set(this.mapBackendOrders(res));
       },
       error: () => {
         this.isLoading.set(false);
@@ -96,8 +111,6 @@ export class OrderService {
       }
     });
   }
-
-
 
   generateNextOrderId(): string {
     const list = this.orders();
@@ -133,23 +146,25 @@ export class OrderService {
     const autoId = this.generateNextOrderId();
     const nextSr = this.orders().length + 1;
 
-    let status = 'IN_PROCESS';
-    if (order.orderStatus === 'Ready to Dispatch') status = 'READY_TO_DISPATCH';
-    if (order.orderStatus === 'Dispatched') status = 'DISPATCHED';
+    let process = 'IN_PROCESS';
+    if (order.orderStatus === 'Ready to Dispatch') process = 'READY_TO_DISPATCH';
+    if (order.orderStatus === 'Dispatched') process = 'DISPATCHED';
 
     let priority = 'HIGH';
     if (order.priority === 'Medium') priority = 'NORMAL';
     if (order.priority === 'Low') priority = 'LOW';
 
-    const payload = {
+    const payload: any = {
       orderNumber: autoId,
-      companyId: order.companyName,
-      productName: order.productName || '',
+      companyId: order.companyId ? Number(order.companyId) : undefined,
+      productId: order.productId ? Number(order.productId) : undefined,
       quantity: Number(order.qty) || 100,
       priority,
-      status,
+      process,
       rank: nextSr,
-      notes: `${order.laserPrint}`
+      notes: `Laser: ${order.laserPrint || ''}; Box: ${order.box || 'With Box'}`,
+      order_status: order.order_status || 'OPEN',
+      addl_attr: order.addl_attr || {}
     };
 
     this.http.post<any>(`${this.apiUrl}/orders`, payload).subscribe({
@@ -158,7 +173,7 @@ export class OrderService {
         this.fetchOrders();
       },
       error: () => {
-        this.commonSvc.showToast("error", "Erro r fetching orders", "Error Fetching Order List, Pls Contact to admin");
+        this.commonSvc.showToast("error", "Error creating order", "Error Creating Order, Pls Contact to admin");
       }
     });
 
@@ -167,20 +182,22 @@ export class OrderService {
 
   // Update Order (Preserves original Order ID)
   updateOrder(order: OrderItem) {
-    let status = 'IN_PROCESS';
-    if (order.orderStatus === 'Ready to Dispatch') status = 'READY_TO_DISPATCH';
-    if (order.orderStatus === 'Dispatched') status = 'DISPATCHED';
+    let process = 'IN_PROCESS';
+    if (order.orderStatus === 'Ready to Dispatch') process = 'READY_TO_DISPATCH';
+    if (order.orderStatus === 'Dispatched') process = 'DISPATCHED';
 
     let priority = 'HIGH';
     if (order.priority === 'Medium') priority = 'NORMAL';
     if (order.priority === 'Low') priority = 'LOW';
 
-    const payload = {
-      productName: order.productName,
+    const payload: any = {
+      companyId: order.companyId ? Number(order.companyId) : undefined,
+      productId: order.productId ? Number(order.productId) : undefined,
       quantity: Number(order.qty) || 100,
       priority,
-      status,
-      notes: `Laser: ${order.laserPrint || ''}; Box: ${order.box || 'With Box'}`
+      process,
+      notes: `Laser: ${order.laserPrint || ''}; Box: ${order.box || 'With Box'}`,
+      addl_attr: order.addl_attr || {}
     };
 
     const targetId = order.id;
@@ -205,29 +222,53 @@ export class OrderService {
     }
   }
 
-  // Quick Action: Advance / Process Status
+  // Quick Action: Advance / Process Status with audit tracking in addl_attr
   quickProcessOrder(order: OrderItem) {
+    const currentUser = this.authService.currentUser();
+    const userName = currentUser?.fullName || currentUser?.username || 'Super User';
+    const now = new Date();
+    const formatted = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
     let nextStatusText: 'Process' | 'Ready to Dispatch' | 'Dispatched' = 'Process';
-    let backendStatus = 'IN_PROCESS';
+    let backendProcess = 'IN_PROCESS';
+    let updatedOrderStatus = order.order_status || 'OPEN';
     let feedbackMsg = '';
+    const updatedAddlAttr: any = { ...(order.addl_attr || {}) };
 
     if (order.orderStatus === 'Process') {
       nextStatusText = 'Ready to Dispatch';
-      backendStatus = 'READY_TO_DISPATCH';
+      backendProcess = 'READY_TO_DISPATCH';
       feedbackMsg = `Order #${order.orderId} moved to Ready to Dispatch!`;
+      updatedAddlAttr.readyToDispatch = {
+        userName: userName,
+        timestamp: now.toISOString(),
+        date: formatted
+      };
     } else if (order.orderStatus === 'Ready to Dispatch') {
       nextStatusText = 'Dispatched';
-      backendStatus = 'DISPATCHED';
-      feedbackMsg = `Order #${order.orderId} marked as Dispatched!`;
+      backendProcess = 'DISPATCHED';
+      updatedOrderStatus = 'CLOSE';
+      feedbackMsg = `Order #${order.orderId} marked as Dispatched & Closed!`;
+      updatedAddlAttr.dispatched = {
+        userName: userName,
+        timestamp: now.toISOString(),
+        date: formatted
+      };
     } else {
       nextStatusText = 'Process';
-      backendStatus = 'IN_PROCESS';
+      backendProcess = 'IN_PROCESS';
       feedbackMsg = `Order #${order.orderId} reset to In Process.`;
     }
 
+    const payload = {
+      process: backendProcess,
+      order_status: updatedOrderStatus,
+      addl_attr: updatedAddlAttr
+    };
+
     const targetId = order.id;
     if (targetId) {
-      this.http.patch(`${this.apiUrl}/orders/${targetId}`, { status: backendStatus }).subscribe({
+      this.http.patch(`${this.apiUrl}/orders/${targetId}`, payload).subscribe({
         next: () => {
           this.fetchOrders();
           this.showToast(feedbackMsg);
@@ -235,7 +276,7 @@ export class OrderService {
         error: () => {
           this.orders.update(list =>
             list.map(item =>
-              item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText } : item
+              item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText, addl_attr: updatedAddlAttr } : item
             )
           );
           this.showToast(feedbackMsg);
@@ -244,47 +285,96 @@ export class OrderService {
     } else {
       this.orders.update(list =>
         list.map(item =>
-          item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText } : item
+          item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText, addl_attr: updatedAddlAttr } : item
         )
       );
       this.showToast(feedbackMsg);
     }
   }
 
+  // Move single order up using backend PATCH /orders/:id/move-up
+  moveOrderUp(order: OrderItem) {
+    if (!order.id) return;
+    this.http.patch<any[]>(`${this.apiUrl}/orders/${order.id}/move-up`, {}).subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.orders.set(this.mapBackendOrders(res));
+        } else {
+          this.fetchOrders();
+        }
+        this.showToast(`Order #${order.orderId} moved up!`);
+      },
+      error: (err) => {
+        console.error('Error moving order up:', err);
+        this.fetchOrders();
+      }
+    });
+  }
+
+  // Move single order down using backend PATCH /orders/:id/move-down
+  moveOrderDown(order: OrderItem) {
+    if (!order.id) return;
+    this.http.patch<any[]>(`${this.apiUrl}/orders/${order.id}/move-down`, {}).subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.orders.set(this.mapBackendOrders(res));
+        } else {
+          this.fetchOrders();
+        }
+        this.showToast(`Order #${order.orderId} moved down!`);
+      },
+      error: (err) => {
+        console.error('Error moving order down:', err);
+        this.fetchOrders();
+      }
+    });
+  }
+
+  // Update order rank using backend PATCH /orders/:id/rank
+  updateOrderRank(orderId: number, newRank: number, orderNumber?: string) {
+    this.http.patch<any[]>(`${this.apiUrl}/orders/${orderId}/rank`, { newRank }).subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.orders.set(this.mapBackendOrders(res));
+        } else {
+          this.fetchOrders();
+        }
+        if (orderNumber) {
+          this.showToast(`Order #${orderNumber} moved to Rank #${newRank}!`);
+        }
+      },
+      error: (err) => {
+        console.error('Error updating order rank:', err);
+        this.fetchOrders();
+      }
+    });
+  }
+
   // Reorder orders by moving from source index to destination index (Drag & Drop)
   reorderOrders(fromIndex: number, toIndex: number) {
     if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
 
-    this.orders.update(currentList => {
-      if (fromIndex >= currentList.length || toIndex >= currentList.length) return currentList;
-      const updated = [...currentList];
-      const [movedItem] = updated.splice(fromIndex, 1);
-      updated.splice(toIndex, 0, movedItem);
+    const currentList = this.orders();
+    if (fromIndex >= currentList.length || toIndex >= currentList.length) return;
 
-      // Re-assign srNo according to the new sequence
-      return updated.map((item, idx) => ({
-        ...item,
-        srNo: idx + 1
-      }));
-    });
-
-    const targetItem = this.orders()[toIndex];
-    if (targetItem && targetItem.id) {
-      this.http.patch(`${this.apiUrl}/orders/${targetItem.id}`, { rank: toIndex + 1 }).subscribe();
+    const movedItem = currentList[fromIndex];
+    if (movedItem && movedItem.id) {
+      const targetRank = toIndex + 1;
+      this.updateOrderRank(movedItem.id, targetRank, movedItem.orderId);
     }
-    this.showToast(`Order #${targetItem.orderId} moved to Rank #${toIndex + 1}!`);
   }
 
   // Move single order up or down by 1 step
   moveOrderRank(orderId: string, direction: 'up' | 'down') {
     const list = this.orders();
-    const currentIndex = list.findIndex(o => o.orderId === orderId);
-    if (currentIndex === -1) return;
+    const order = list.find(o => o.orderId === orderId);
+    if (!order) return;
 
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= list.length) return;
-
-    this.reorderOrders(currentIndex, targetIndex);
+    if (direction === 'up') {
+      this.moveOrderUp(order);
+    } else {
+      this.moveOrderDown(order);
+    }
   }
 
   // Delete Order
@@ -294,28 +384,20 @@ export class OrderService {
       this.http.delete(`${this.apiUrl}/orders/${ord.id}`).subscribe({
         next: () => {
           this.fetchOrders();
-          this.showToast(`Order #${orderId} deleted from database.`);
+          this.showToast(`Order #${orderId} moved to Deleted Orders.`);
         },
         error: () => {
-          this.orders.update(list => {
-            const filtered = list.filter(o => o.orderId !== orderId);
-            return filtered.map((item, idx) => ({
-              ...item,
-              srNo: idx + 1
-            }));
-          });
-          this.showToast(`Order #${orderId} deleted.`);
+          this.orders.update(list =>
+            list.map(o => o.orderId === orderId ? { ...o, order_status: 'DELETED' } : o)
+          );
+          this.showToast(`Order #${orderId} moved to Deleted Orders.`);
         }
       });
     } else {
-      this.orders.update(list => {
-        const filtered = list.filter(o => o.orderId !== orderId);
-        return filtered.map((item, idx) => ({
-          ...item,
-          srNo: idx + 1
-        }));
-      });
-      this.showToast(`Order #${orderId} deleted.`);
+      this.orders.update(list =>
+        list.map(o => o.orderId === orderId ? { ...o, order_status: 'DELETED' } : o)
+      );
+      this.showToast(`Order #${orderId} moved to Deleted Orders.`);
     }
   }
 }

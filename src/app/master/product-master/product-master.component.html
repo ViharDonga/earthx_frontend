@@ -38,32 +38,18 @@
         <thead>
           <tr>
             <th style="width: 120px;">Model Code</th>
+            <th style="width: 120px; text-align: center;">Action</th>
             <th>Product Description</th>
             <th>Category</th>
             <!-- <th>HSN Code</th> -->
             <th>Unit Price</th>
             <th>Stock Available</th>
             <th style="width: 120px;">Status</th>
-            <th style="width: 120px; text-align: center;">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let prod of filteredProducts">
             <td class="font-mono font-bold text-red">{{ prod.code }}</td>
-            <td class="font-bold">
-              <i class="ri-cpu-line text-red"></i> {{ prod.name }}
-            </td>
-            <td><span class="category-badge">{{ prod.category }}</span></td>
-            <!-- <td class="font-mono text-muted">{{ prod.hsn }}</td> -->
-            <td class="font-bold">₹{{ prod.unitPrice }}</td>
-            <td class="font-bold">{{ prod.unit }} units</td>
-            <td>
-              <span class="order-status-pill" [class.dispatched]="prod.status === 'Active'"
-                [class.process]="prod.status === 'IN Active'">
-                <span class="status-dot"></span>
-                <span>{{ prod.status }}</span>
-              </span>
-            </td>
             <td class="action-cell">
               <div class="action-btn-group">
                 <button type="button" class="modern-action-btn edit-action" (click)="editProduct(prod)"
@@ -80,6 +66,21 @@
                 </button>
               </div>
             </td>
+            <td class="font-bold">
+              <i class="ri-cpu-line text-red"></i> {{ prod.name }}
+            </td>
+            <td><span class="category-badge">{{ prod.category }}</span></td>
+            <!-- <td class="font-mono text-muted">{{ prod.hsn }}</td> -->
+            <td class="font-bold">₹{{ prod.unitPrice }}</td>
+            <td class="font-bold">{{ prod.unit }} units</td>
+            <td>
+              <span class="order-status-pill" [class.dispatched]="prod.status === 'Active'"
+                [class.process]="prod.status === 'Inactive'">
+                <span class="status-dot"></span>
+                <span>{{ prod.status }}</span>
+              </span>
+            </td>
+
           </tr>
 
           <tr *ngIf="filteredProducts.length === 0">
@@ -207,7 +208,7 @@
         <label class="field-label">Status *</label>
         <select [(ngModel)]="newProduct.status" class="clean-input clean-select">
           <option value="Active">🟢 Active</option>
-          <option value="IN Active">🔴 IN Active</option>
+          <option value="Inactive">🔴 Inactive</option>
         </select>
       </div>
     </div>

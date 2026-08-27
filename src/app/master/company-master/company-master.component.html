@@ -27,34 +27,18 @@
         <thead>
           <tr>
             <th style="width: 70px;">ID</th>
+            <th style="width: 100px; text-align: center;">Action</th>
             <th>Company Name</th>
             <th>Contact Person</th>
             <th>Phone / Mobile</th>
             <th>City / Region</th>
             <th>GST Number</th>
             <th style="width: 110px;">Status</th>
-            <th style="width: 100px; text-align: center;">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let comp of filteredCompanies">
             <td class="font-bold font-mono text-muted">#{{ comp.id }}</td>
-            <td class="company-name-cell font-bold">{{ comp.companyName }}</td>
-            <td class="font-bold">{{ comp.contactPerson }}</td>
-            <td class="font-mono text-muted">{{ comp.phone }}</td>
-            <td>
-              @if (comp.city && comp.city != '-') {
-              <i class="ri-map-pin-line text-red"></i>
-              }
-              {{ comp.city }}
-            </td>
-            <td class="font-mono text-muted">{{ comp.gstNumber }}</td>
-            <td>
-              <span class="order-status-pill dispatched">
-                <span class="status-dot"></span>
-                <span>{{ comp.status }}</span>
-              </span>
-            </td>
             <td class="action-cell">
               <div class="action-btn-group">
                 <button type="button" class="modern-action-btn edit-action" (click)="editCompany(comp)"
@@ -71,6 +55,24 @@
                 </button>
               </div>
             </td>
+            <td class="company-name-cell font-bold">{{ comp.companyName }}</td>
+            <td class="font-bold">{{ comp.contactPerson }}</td>
+            <td class="font-mono text-muted">{{ comp.phone }}</td>
+            <td>
+              @if (comp.city && comp.city != '-') {
+              <i class="ri-map-pin-line text-red"></i>
+              }
+              {{ comp.city }}
+            </td>
+            <td class="font-mono text-muted">{{ comp.gstNumber }}</td>
+            <td>
+              <span class="order-status-pill" [class.dispatched]="comp.status === 'Active'"
+                [class.process]="comp.status === 'Inactive'">
+                <span class="status-dot"></span>
+                <span>{{ comp.status }}</span>
+              </span>
+            </td>
+
           </tr>
 
           <tr *ngIf="filteredCompanies.length === 0">

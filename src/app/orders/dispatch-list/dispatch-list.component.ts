@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../services/order.service';
 import { CompanyService } from '../../services/company.service';
 import { OrderItem } from '../../models/order.model';
+import { ExportService } from '../../services/export.service';
 
 @Component({
   selector: 'app-dispatch-list',
@@ -15,22 +16,49 @@ import { OrderItem } from '../../models/order.model';
 export class DispatchListComponent {
   searchQuery = signal<string>('');
   selectedCompanyFilter = signal<string>('All');
+  filterDateFrom = signal<string>('');
+  filterDateTo = signal<string>('');
 
   // Modals state
-  showEditOrderModal = signal<boolean>(false);
   showViewOrderModal = signal<boolean>(false);
   selectedOrder = signal<OrderItem | null>(null);
 
-  newOrder: Partial<OrderItem> = {};
-
   constructor(
     public orderService: OrderService,
-    public companyService: CompanyService
-  ) {}
+    public companyService: CompanyService,
+    public exportService: ExportService
+  ) {
+    this.setCurrentMonthFilter();
+  }
+
+  setCurrentMonthFilter() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const firstDay = `${yyyy}-${mm}-01`;
+    const lastDate = new Date(yyyy, now.getMonth() + 1, 0).getDate();
+    const lastDay = `${yyyy}-${mm}-${String(lastDate).padStart(2, '0')}`;
+
+    this.filterDateFrom.set(firstDay);
+    this.filterDateTo.set(lastDay);
+  }
+
+  clearDateFilter() {
+    this.filterDateFrom.set('');
+    this.filterDateTo.set('');
+  }
+
+  exportExcel() {
+    this.exportService.exportToExcel(this.dispatchOrders, 'EarthX_Dispatched_Orders');
+  }
+
+  exportPdf() {
+    this.exportService.exportToPdf(this.dispatchOrders, 'Dispatched Orders Report', 'EarthX_Dispatched_Orders');
+  }
 
   get dispatchOrders(): OrderItem[] {
     return this.orderService.orders().filter(item => {
-      const isDispatchable = item.orderStatus === 'Ready to Dispatch' || item.orderStatus === 'Dispatched';
+      const isDispatched = (item.order_status === 'CLOSE' || item.orderStatus === 'Dispatched') && item.order_status !== 'DELETED';
       const matchesCompany = this.selectedCompanyFilter() === 'All' || item.companyName === this.selectedCompanyFilter();
       const query = this.searchQuery().trim().toLowerCase();
       const matchesSearch =
@@ -40,7 +68,29 @@ export class DispatchListComponent {
         item.productName.toLowerCase().includes(query) ||
         item.laserPrint.toLowerCase().includes(query);
 
-      return isDispatchable && matchesCompany && matchesSearch;
+      let matchesDate = true;
+      if (this.filterDateFrom() || this.filterDateTo()) {
+        const itemDate = this.orderService.parseOrderDate(item.date);
+        if (itemDate) {
+          if (this.filterDateFrom()) {
+            const fromDate = this.orderService.parseOrderDate(this.filterDateFrom());
+            if (fromDate && itemDate < fromDate) {
+              matchesDate = false;
+            }
+          }
+          if (this.filterDateTo() && matchesDate) {
+            const toDate = this.orderService.parseOrderDate(this.filterDateTo());
+            if (toDate) {
+              toDate.setHours(23, 59, 59, 999);
+              if (itemDate > toDate) {
+                matchesDate = false;
+              }
+            }
+          }
+        }
+      }
+
+      return isDispatched && matchesCompany && matchesSearch && matchesDate;
     });
   }
 
@@ -51,22 +101,5 @@ export class DispatchListComponent {
   viewOrder(order: OrderItem) {
     this.selectedOrder.set(order);
     this.showViewOrderModal.set(true);
-  }
-
-  editOrder(order: OrderItem) {
-    this.selectedOrder.set(order);
-    this.newOrder = { ...order };
-    this.showEditOrderModal.set(true);
-  }
-
-  saveOrder() {
-    if (this.selectedOrder()) {
-      this.orderService.updateOrder({
-        ...this.selectedOrder()!,
-        ...this.newOrder as OrderItem,
-        orderId: this.selectedOrder()!.orderId
-      });
-    }
-    this.showEditOrderModal.set(false);
   }
 }

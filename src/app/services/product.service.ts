@@ -40,7 +40,7 @@ export class ProductService {
             category: p.description || '-',
             unitPrice: Number(p.price) || 0,
             unit: p.unit,
-            status: p.isActive === false ? 'IN Active' : 'Active'
+            status: p.isActive === false ? 'Inactive' : 'Active'
           }));
           this.products.set(mapped);
         } else {
@@ -77,7 +77,7 @@ export class ProductService {
       description: product.category || 'Power Supplies',
       price: Number(product.unitPrice) || 0,
       unit: Number(product.unit) || 0,
-      isActive: product.status !== 'IN Active'
+      isActive: product.status !== 'Inactive'
     };
 
     this.http.post<any>(`${this.apiUrl}/products`, payload).subscribe({
@@ -96,7 +96,7 @@ export class ProductService {
       description: product.category,
       price: Number(product.unitPrice) || 0,
       unit: Number(product.unit) || 0,
-      isActive: product.status !== 'IN Active'
+      isActive: product.status !== 'Inactive'
     };
 
     const targetId = product.id;
