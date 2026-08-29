@@ -5,7 +5,7 @@ import { Injectable, signal, effect } from '@angular/core';
 })
 export class ThemeService {
   // 'dark' or 'light'
-  currentTheme = signal<'dark' | 'light'>('dark');
+  currentTheme = signal<'dark' | 'light'>('light');
 
   constructor() {
     // Check saved local theme or system preference
@@ -22,7 +22,7 @@ export class ThemeService {
   }
 
   toggleTheme() {
-    this.currentTheme.update(t => (t === 'dark' ? 'light' : 'dark'));
+    this.currentTheme.update(t => (t === 'light' ? 'light' : 'dark'));
   }
 
   setTheme(theme: 'dark' | 'light') {
