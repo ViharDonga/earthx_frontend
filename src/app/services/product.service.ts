@@ -35,9 +35,9 @@ export class ProductService {
         if (res && res.length > 0) {
           const mapped: ProductMaster[] = res.map((p, idx) => ({
             id: p.id,
-            code: p.sku || `-`,
+            code: p.sku || ``,
             name: p.name || '',
-            category: p.description || '-',
+            category: p.description || '',
             unitPrice: Number(p.price) || 0,
             unit: p.unit,
             status: p.isActive === false ? 'Inactive' : 'Active'
@@ -60,7 +60,7 @@ export class ProductService {
         sku: p.code,
         description: p.category,
         price: p.unitPrice,
-        unit: 'PCS',
+        unit: 0,
         isActive: true
       }).subscribe({
         next: () => this.fetchProducts()
@@ -82,10 +82,11 @@ export class ProductService {
 
     this.http.post<any>(`${this.apiUrl}/products`, payload).subscribe({
       next: () => {
+        this.showToast.showToast('success', 'Product Added', `Product "${product.name}" added successfully!`);
         this.fetchProducts();
       },
-      error: () => {
-        this.showToast.showToast('error', 'Failed to add product!', 'Please try again.');
+      error: (err: any) => {
+        this.showToast.showToast('error', 'Failed to add product!', err.error.message || 'Please try again.');
       }
     });
   }
@@ -102,9 +103,12 @@ export class ProductService {
     const targetId = product.id;
     if (targetId) {
       this.http.patch(`${this.apiUrl}/products/${targetId}`, payload).subscribe({
-        next: () => this.fetchProducts(),
-        error: () => {
-          this.showToast.showToast('error', 'Failed to update product!', 'Please try again.');
+        next: () =>{ 
+          this.showToast.showToast('success', 'Product Updated', `Product "${product.name}" updated successfully!`);
+          this.fetchProducts()
+        },
+        error: (err: any) => {
+          this.showToast.showToast('error', 'Failed to update product!', err.error.message || 'Please try again.');
         }
       });
     } else {
@@ -112,17 +116,21 @@ export class ProductService {
     }
   }
 
-  deleteProduct(idOrCode: any) {
+  deleteProduct(idOrCode: any, name: string) {
     const prod = this.products().find(p => p.id === idOrCode || p.code === idOrCode);
     if (prod && prod.id) {
       this.http.delete(`${this.apiUrl}/products/${prod.id}`).subscribe({
-        next: () => this.fetchProducts(),
-        error: () => {
-          this.products.update(list => list.filter(p => p.code !== prod.code));
+        next: () =>{ 
+          this.showToast.showToast('success', 'Product Deleted', `Product "${name}" deleted SuccessFully.`);
+          this.fetchProducts()
+        },
+        error: (err: any) => {
+          this.showToast.showToast('error', 'Failed to delete product!', err.error.message || 'Please try again.');
         }
       });
-    } else {
-      this.products.update(list => list.filter(p => p.code !== idOrCode && p.id !== idOrCode));
+    }
+    else {
+      this.showToast.showToast('error', 'Failed to update product!', 'Please try again.');
     }
   }
 }

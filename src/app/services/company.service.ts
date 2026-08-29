@@ -25,19 +25,19 @@ export class CompanyService {
         if (res && res.length > 0) {
           const mapped: CompanyItem[] = res.map((c, idx) => ({
             id: c.id,
-            companyName: c.name || '-',
-            contactPerson: c.contactPerson || '-',
-            phone: c.phone || '-',
-            city: c.address || '-',
-            gstNumber: c.gstNumber || '-',
-            email: c.email || '-',
+            companyName: c.name || '',
+            contactPerson: c.contactPerson || '',
+            phone: c.phone || '',
+            city: c.address || '',
+            gstNumber: c.gstNumber || '',
+            email: c.email || '',
             status: c.isActive === false ? 'Inactive' : 'Active'
           }));
           this.companies.set(mapped);
         }
       },
-      error: () => {
-        this.isLoading.set(false);
+      error: (err: any) => {
+        this.commonSvc.showToast("error", "Failed to add company", err.error.message || "Error occurred while adding company, Pls Contact To admin")
       }
     });
   }
@@ -59,8 +59,8 @@ export class CompanyService {
         this.commonSvc.showToast('success', 'Company Added', `Company "${company.companyName}" added successfully!`);
         this.fetchCompanies();
       },
-      error: () => {
-        this.commonSvc.showToast("error", "Failed to add company", "Error occurred while adding company, Pls Contact To admin")
+      error: (err: any) => {
+        this.commonSvc.showToast("error", "Failed to add company", err.error.message || "Error occurred while adding company, Pls Contact To admin")
       }
     });
   }
@@ -79,23 +79,22 @@ export class CompanyService {
     this.http.patch(`${this.apiUrl}/companies/${company.id}`, payload).subscribe({
       next: () => {
         this.commonSvc.showToast('success', 'Company Updated', `Company "${company.companyName}" updated successfully!`);
-
         this.fetchCompanies();
       },
       error: (err) => {
-        console.log(err);
-        this.commonSvc.showToast("error", "Failed to update company", "Error occurred while updating company, Pls Contact To admin")
+        this.commonSvc.showToast("error", "Failed to add company", err.error.message || "Error occurred while adding company, Pls Contact To admin")
       }
     });
   }
 
-  deleteCompany(id: number) {
+  deleteCompany(id: number, name: string) {
     this.http.delete(`${this.apiUrl}/companies/${id}`).subscribe({
       next: () => {
+        this.commonSvc.showToast('success', 'Company Deleted', `Company "${name}" deleted.`);
         this.fetchCompanies();
       },
-      error: () => {
-        this.commonSvc.showToast("error", "Failed to delete company", "Error occurred while deleting company, Pls Contact To admin")
+      error: (err: any) => {
+        this.commonSvc.showToast("error", "Failed to delete company", err.error.message || "Error occurred while deleting company, Pls Contact To admin")
       }
     });
   }

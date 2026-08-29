@@ -49,22 +49,22 @@
                   title="View Details">
                   <i class="ri-eye-line"></i>
                 </button>
-                <button type="button" class="modern-action-btn delete-action" (click)="deleteCompany(comp)"
+                <!-- <button type="button" class="modern-action-btn delete-action" (click)="deleteCompany(comp)"
                   title="Delete Company">
                   <i class="ri-delete-bin-line"></i>
-                </button>
+                </button> -->
               </div>
             </td>
-            <td class="company-name-cell font-bold">{{ comp.companyName }}</td>
-            <td class="font-bold">{{ comp.contactPerson }}</td>
-            <td class="font-mono text-muted">{{ comp.phone }}</td>
+            <td class="company-name-cell font-bold">{{ comp.companyName || '-' }}</td>
+            <td class="font-bold">{{ comp.contactPerson || '-' }}</td>
+            <td class="font-mono text-muted">{{ comp.phone || '-' }}</td>
             <td>
               @if (comp.city && comp.city != '-') {
               <i class="ri-map-pin-line text-red"></i>
               }
-              {{ comp.city }}
+              {{ comp.city || '-' }}
             </td>
-            <td class="font-mono text-muted">{{ comp.gstNumber }}</td>
+            <td class="font-mono text-muted">{{ comp.gstNumber || '-' }}</td>
             <td>
               <span class="order-status-pill" [class.dispatched]="comp.status === 'Active'"
                 [class.process]="comp.status === 'Inactive'">

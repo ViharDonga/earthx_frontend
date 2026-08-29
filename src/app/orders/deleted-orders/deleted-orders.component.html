@@ -56,9 +56,9 @@
               </div>
             </td>
 
-            <td class="date-cell">{{ row.date }}</td>
-            <td class="company-name-cell">{{ row.companyName }}</td>
-            <td class="product-name-cell">{{ row.productName }}</td>
+            <td class="date-cell">{{ row.date || '-' }}</td>
+            <td class="company-name-cell">{{ row.companyName || '-' }}</td>
+            <td class="product-name-cell">{{ row.productName || '-' }}</td>
             <td class="qty-cell font-bold">{{ row.qty | number }}</td>
 
             <td>
@@ -66,7 +66,7 @@
                 <i class="ri-fire-fill" *ngIf="row.priority === 'High'"></i>
                 <i class="ri-flashlight-fill" *ngIf="row.priority === 'Medium'"></i>
                 <i class="ri-checkbox-circle-fill" *ngIf="row.priority === 'Low'"></i>
-                <span>{{ row.priority }}</span>
+                <span>{{ row.priority || '-' }}</span>
               </span>
             </td>
 
@@ -83,7 +83,7 @@
               <span class="box-badge-tag" [class.with-box]="row.box === 'With Box'" [class.without-box]="row.box === 'Without Box'">
                 <i class="ri-box-3-line" *ngIf="row.box === 'With Box'"></i>
                 <i class="ri-close-line" *ngIf="row.box === 'Without Box'"></i>
-                <span>{{ row.box }}</span>
+                <span>{{ row.box || '-' }}</span>
               </span>
             </td>
           </tr>

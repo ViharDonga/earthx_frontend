@@ -105,9 +105,9 @@ export class OrderService {
         this.isLoading.set(false);
         this.orders.set(this.mapBackendOrders(res));
       },
-      error: () => {
+      error: (err: any) => {
         this.isLoading.set(false);
-        this.commonSvc.showToast("error", "Error fetching orders", "Error Fetching Order List, Pls Contact to admin");
+        this.commonSvc.showToast("error", "Error fetching orders", err.error.message || "Error Fetching Order List, Pls Contact to admin");
       }
     });
   }
@@ -172,8 +172,8 @@ export class OrderService {
         this.showToast(`New Order #${autoId} created successfully!`);
         this.fetchOrders();
       },
-      error: () => {
-        this.commonSvc.showToast("error", "Error creating order", "Error Creating Order, Pls Contact to admin");
+      error: (err: any) => {
+        this.commonSvc.showToast("error", "Error creating order", err.error.message || "Error Creating Order, Pls Contact to admin");
       }
     });
 
@@ -204,21 +204,15 @@ export class OrderService {
     if (targetId) {
       this.http.patch(`${this.apiUrl}/orders/${targetId}`, payload).subscribe({
         next: () => {
-          this.fetchOrders();
-          this.showToast(`Order #${order.orderId} updated successfully!`);
-        },
-        error: () => {
-          this.orders.update(list =>
-            list.map(item => (item.orderId === order.orderId ? { ...item, ...order } : item))
-          );
-          this.showToast(`Order #${order.orderId} updated successfully!`);
+            this.commonSvc.showToast('success', 'Order Updated', `Order #${order.orderId} updated successfully!`);
+            this.fetchOrders();
+          },
+        error: (err: any) => {
+          this.commonSvc.showToast('error', 'Order Updated', err.error.message || `Order #${order.orderId} updated successfully!`);
         }
       });
     } else {
-      this.orders.update(list =>
-        list.map(item => (item.orderId === order.orderId ? { ...item, ...order } : item))
-      );
-      this.showToast(`Order #${order.orderId} updated successfully!`);
+      this.commonSvc.showToast('error', 'Order Updated', `Order #${order.orderId} Not Found.`);
     }
   }
 
@@ -270,16 +264,12 @@ export class OrderService {
     if (targetId) {
       this.http.patch(`${this.apiUrl}/orders/${targetId}`, payload).subscribe({
         next: () => {
+          this.commonSvc.showToast('success', 'Order Status Updated', feedbackMsg);
           this.fetchOrders();
-          this.showToast(feedbackMsg);
         },
-        error: () => {
-          this.orders.update(list =>
-            list.map(item =>
-              item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText, addl_attr: updatedAddlAttr } : item
-            )
-          );
-          this.showToast(feedbackMsg);
+        error: (err: any) => {
+       
+          this.commonSvc.showToast('error', 'Order Status Updated', err.error.message || feedbackMsg);
         }
       });
     } else {
@@ -305,7 +295,7 @@ export class OrderService {
         this.showToast(`Order #${order.orderId} moved up!`);
       },
       error: (err) => {
-        console.error('Error moving order up:', err);
+        this.commonSvc.showToast('error', 'Order Rank Updated', err.error.message + '\n' + `Order #${order.orderId} Rank Updated Failed.`);
         this.fetchOrders();
       }
     });
@@ -321,10 +311,10 @@ export class OrderService {
         } else {
           this.fetchOrders();
         }
-        this.showToast(`Order #${order.orderId} moved down!`);
+        this.commonSvc.showToast('success', 'Order Rank Updated', `Order #${order.orderId} moved down!`);
       },
-      error: (err) => {
-        console.error('Error moving order down:', err);
+      error: (err: any) => {
+        this.commonSvc.showToast('error', 'Order Rank Updated', err.error.message + '\n' + `Order #${order.orderId} Rank Updated Failed.`);
         this.fetchOrders();
       }
     });
@@ -340,11 +330,11 @@ export class OrderService {
           this.fetchOrders();
         }
         if (orderNumber) {
-          this.showToast(`Order #${orderNumber} moved to Rank #${newRank}!`);
+          this.commonSvc.showToast('success', 'Order Rank Updated', `Order #${orderNumber} moved to Rank #${newRank}!`);
         }
       },
-      error: (err) => {
-        console.error('Error updating order rank:', err);
+      error: (err: any) => {
+        this.commonSvc.showToast('error', 'Order Rank Updated', err.error.message + '\n' + `Order #${orderId} Rank Updated Failed.`);
         this.fetchOrders();
       }
     });
@@ -383,21 +373,15 @@ export class OrderService {
     if (ord && ord.id) {
       this.http.delete(`${this.apiUrl}/orders/${ord.id}`).subscribe({
         next: () => {
+          this.commonSvc.showToast('success', 'Order Deleted', `Order #${orderId} Deleted SuccessFully.`);
           this.fetchOrders();
-          this.showToast(`Order #${orderId} moved to Deleted Orders.`);
         },
-        error: () => {
-          this.orders.update(list =>
-            list.map(o => o.orderId === orderId ? { ...o, order_status: 'DELETED' } : o)
-          );
-          this.showToast(`Order #${orderId} moved to Deleted Orders.`);
+        error: (err: any) => {
+          this.commonSvc.showToast('error', 'Order Deleted', err.error.message + '\n' + `Order #${orderId} Deleted Failed.`);
         }
       });
     } else {
-      this.orders.update(list =>
-        list.map(o => o.orderId === orderId ? { ...o, order_status: 'DELETED' } : o)
-      );
-      this.showToast(`Order #${orderId} moved to Deleted Orders.`);
+      this.commonSvc.showToast('error', 'Order Deleted', `Order #${orderId} Not Found.`);
     }
   }
 }

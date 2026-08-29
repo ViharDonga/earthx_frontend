@@ -87,8 +87,7 @@ export class ProductMasterComponent implements OnInit {
     });
 
     if (confirmed) {
-      this.productService.deleteProduct(product.code);
-      this.toast.showToast('success', 'Product Deleted', `Product "${product.name}" deleted.`);
+      this.productService.deleteProduct(product.code,product.name);
     }
   }
 
@@ -109,10 +108,8 @@ export class ProductMasterComponent implements OnInit {
         ...this.newProduct as ProductMaster,
         code: this.selectedProduct()!.code
       });
-      this.toast.showToast('success', 'Product Updated', `Product "${this.newProduct.name}" updated successfully!`);
     } else {
       this.productService.addProduct(this.newProduct);
-      this.toast.showToast('success', 'Product Added', `Product "${this.newProduct.name}" added successfully!`);
     }
 
     this.showAddProductModal.set(false);

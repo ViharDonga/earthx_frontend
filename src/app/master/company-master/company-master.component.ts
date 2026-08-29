@@ -81,8 +81,8 @@ export class CompanyMasterComponent {
     });
 
     if (confirmed) {
-      this.companyService.deleteCompany(company.id);
-      this.toast.showToast('success', 'Company Deleted', `Company "${company.companyName}" deleted.`);
+      this.companyService.deleteCompany(company.id, company.companyName);
+     
     }
   }
 

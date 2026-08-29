@@ -72,11 +72,11 @@ export class OrderListComponent {
   // Only active products for order creation/editing (filtered by selected company if chosen)
   get activeProducts() {
     return this.productService.products().filter(p => {
-      const isActive = (p.status === 'Active' || (p.status as any) === 'OPEN') && p.isActive !== false;
+      const isActive = p.isActive != false;
       if (!isActive) return false;
-      if (this.newOrder.companyId) {
-        return Number(p.companyId) === Number(this.newOrder.companyId) || Number(p.company?.id) === Number(this.newOrder.companyId);
-      }
+      // if (this.newOrder.companyId) {
+      //   return Number(p.companyId) === Number(this.newOrder.companyId) || Number(p.company?.id) === Number(this.newOrder.companyId);
+      // }
       return true;
     });
   }
@@ -281,7 +281,7 @@ export class OrderListComponent {
 
     if (confirmed) {
       this.orderService.deleteOrder(order.orderId);
-      this.commonService.showToast('success', 'Order Deleted', `Order #${order.orderId} deleted.`);
+    
     }
   }
 
@@ -389,7 +389,6 @@ export class OrderListComponent {
         ...this.newOrder as OrderItem,
         orderId: this.selectedOrder()!.orderId
       });
-      this.commonService.showToast('success', 'Order Updated', `Order #${this.selectedOrder()!.orderId} updated successfully!`);
     } else {
       this.orderService.addOrder(this.newOrder);
     }

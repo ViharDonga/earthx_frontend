@@ -381,7 +381,7 @@
         <div class="field-input-wrapper">
           <i class="ri-cpu-line field-icon text-red"></i>
           <select [(ngModel)]="newOrder.productId" class="clean-input clean-select">
-            <option [ngValue]="undefined" disabled>-- Select Active Product --</option>
+            <option [ngValue]="null" disabled>-- Select Active Product --</option>
             <option *ngFor="let p of activeProducts" [ngValue]="p.id">
               {{ p.name }}
             </option>
