@@ -23,9 +23,7 @@ export class ProductService {
     'PCB Assemblies'
   ];
 
-  constructor(private http: HttpClient) {
-    this.fetchProducts();
-  }
+  constructor(private http: HttpClient) {}
 
   fetchProducts() {
     this.isLoading.set(true);

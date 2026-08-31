@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../services/order.service';
@@ -16,7 +16,7 @@ import { ExportService } from '../../services/export.service';
   templateUrl: './order-list.component.html',
   styleUrl: './order-list.component.scss'
 })
-export class OrderListComponent {
+export class OrderListComponent implements OnInit {
   // Filters
   searchQuery = signal<string>('');
   filterPriority = signal<string>('All');
@@ -57,6 +57,12 @@ export class OrderListComponent {
     public authService: AuthService,
     public exportService: ExportService
   ) { }
+
+  ngOnInit() {
+    this.orderService.fetchOrders();
+    this.companyService.fetchCompanies();
+    this.productService.fetchProducts();
+  }
 
   get minOrderDate(): string {
     return this.commonService.getTodayDateString();

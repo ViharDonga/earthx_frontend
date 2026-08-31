@@ -51,10 +51,11 @@ export class AuthComponent {
     username: '',
     email: '',
     phone: '',
-    selectedRoleId: 'super-user', // Default to Super User
+    selectedRoleId: 'user', // Default to User
     password: '',
     confirmPassword: '',
-    agreeTerms: true
+    agreeTerms: true,
+    status: 'pending'
   };
 
   // Roles: Super User & User
@@ -149,15 +150,19 @@ export class AuthComponent {
 
     this.isSubmitting.set(true);
 
+    const phoneVal = (this.registerData.phone || '').trim();
+
     this.authService.register({
       name: this.registerData.fullName.trim(),
       email: this.registerData.email.trim(),
       password: this.registerData.password,
       role: this.registerData.selectedRoleId,
+      phone: phoneVal,
+      status: 'pending'
     }).subscribe({
       next: (res) => {
         this.isSubmitting.set(false);
-        this.showToast('success', 'Registration Complete', `Account created successfully for ${res.user.name}. Please sign in.`);
+        this.showToast('success', 'Registration Complete', `Account created successfully for ${res.user.name}. Please Contact Admin and Get Approved Login Request.`);
         this.loginData.username = this.registerData.email;
         this.activeTab.set('login');
       },

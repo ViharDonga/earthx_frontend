@@ -7,11 +7,15 @@ import { ThemeService } from '../services/theme.service';
 import { OrderService } from '../services/order.service';
 import { CompanyService } from '../services/company.service';
 import { ProductService } from '../services/product.service';
+import { UserService } from '../services/user.service';
 import { OrderListComponent } from '../orders/order-list/order-list.component';
 import { DispatchListComponent } from '../orders/dispatch-list/dispatch-list.component';
 import { DeletedOrdersComponent } from '../orders/deleted-orders/deleted-orders.component';
 import { CompanyMasterComponent } from '../master/company-master/company-master.component';
 import { ProductMasterComponent } from '../master/product-master/product-master.component';
+import { UserMasterComponent } from '../master/user-master/user-master.component';
+
+export type DashboardViewType = 'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product' | 'master-user';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +27,8 @@ import { ProductMasterComponent } from '../master/product-master/product-master.
     DispatchListComponent,
     DeletedOrdersComponent,
     CompanyMasterComponent,
-    ProductMasterComponent
+    ProductMasterComponent,
+    UserMasterComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -32,9 +37,10 @@ export class DashboardComponent implements OnInit {
   @ViewChild(OrderListComponent) orderListRef?: OrderListComponent;
   @ViewChild(CompanyMasterComponent) companyMasterRef?: CompanyMasterComponent;
   @ViewChild(ProductMasterComponent) productMasterRef?: ProductMasterComponent;
+  @ViewChild(UserMasterComponent) userMasterRef?: UserMasterComponent;
 
-  // Active module view: 'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product'
-  activeView = signal<'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product'>('orders-list');
+  // Active module view: 'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product' | 'master-user'
+  activeView = signal<DashboardViewType>('orders-list');
 
   // Sidebar open / collapsed state
   isSidebarOpen = signal<boolean>(true);
@@ -65,30 +71,21 @@ export class DashboardComponent implements OnInit {
     ).length;
   }
 
+  get pendingUserCount(): number {
+    return this.userService.users().filter(u => (u.status || '').toLowerCase() === 'pending').length;
+  }
+
   constructor(
     public authService: AuthService,
     public themeService: ThemeService,
     public orderService: OrderService,
     public companyService: CompanyService,
     public productService: ProductService,
+    public userService: UserService,
     private router: Router
   ) {}
 
   ngOnInit() {
-    this.companyService.fetchCompanies();
-    this.productService.fetchProducts();
-    this.orderService.fetchOrders();
-
-    if (!this.authService.isAuthenticated()) {
-      this.authService.currentUser.set({
-        username: 'superuser@earthx.in',
-        fullName: 'EarthX Super User',
-        email: 'superuser@earthx.in',
-        role: 'super-user',
-        roleLabel: 'Super User'
-      });
-    }
-
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isSidebarOpen.set(false);
     }
@@ -98,7 +95,7 @@ export class DashboardComponent implements OnInit {
     this.isSidebarOpen.update(v => !v);
   }
 
-  selectMenuItem(view: 'orders-list' | 'orders-dispatch' | 'orders-deleted' | 'master-company' | 'master-product') {
+  selectMenuItem(view: DashboardViewType) {
     this.activeView.set(view);
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.isSidebarOpen.set(false);
@@ -111,18 +108,6 @@ export class DashboardComponent implements OnInit {
 
   toggleMasterMenu() {
     this.isMasterMenuOpen.update(v => !v);
-  }
-
-  switchRole(role: 'super-user' | 'user') {
-    this.authService.currentUser.update(u => ({
-      ...u,
-      role,
-      roleLabel: role === 'super-user' ? 'Super User' : 'User'
-    }));
-
-    if (role === 'user' && this.activeView().startsWith('master')) {
-      this.activeView.set('orders-list');
-    }
   }
 
   // Quick Action from top header bar
@@ -140,3 +125,4 @@ export class DashboardComponent implements OnInit {
     this.authService.logout();
   }
 }
+

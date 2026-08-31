@@ -8,7 +8,9 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
+  status?: string;
   createdAt?: string;
 }
 
@@ -17,6 +19,7 @@ export interface CurrentUser {
   username: string;
   fullName: string;
   email: string;
+  phone?: string;
   role: 'super-user' | 'user';
   roleLabel: string;
 }
@@ -36,7 +39,9 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
+  phone?: string;
   role?: string;
+  status?: string;
 }
 
 @Injectable({
@@ -54,7 +59,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+  ) { }
 
   /**
    * Register a new user with NestJS backend
@@ -139,8 +144,9 @@ export class AuthService {
       username: res.user.email,
       fullName: res.user.name,
       email: res.user.email,
+      phone: res.user.phone || '',
       role: isSuperUser ? 'super-user' : 'user',
-      roleLabel: isSuperUser ? 'Super User' : 'User'
+      roleLabel: isSuperUser ? 'Super User' : 'User',
     };
 
     localStorage.setItem(this.USER_KEY, JSON.stringify(userObj));
@@ -158,11 +164,12 @@ export class AuthService {
       }
     }
     return {
-      username: 'superuser@earthx.in',
-      fullName: 'Chief Operations Lead',
-      email: 'superuser@earthx.in',
-      role: 'super-user',
-      roleLabel: 'Super User'
+      username: '',
+      fullName: '',
+      email: '',
+      phone: '',
+      role: 'user',
+      roleLabel: 'User'
     };
   }
 }

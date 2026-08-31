@@ -29,9 +29,7 @@ export class OrderService {
     private commonSvc: CommonService,
     private productService: ProductService,
     private authService: AuthService
-  ) {
-    this.fetchOrders();
-  }
+  ) {}
 
   // Show Toast
   showToast(message: string) {
@@ -285,17 +283,13 @@ export class OrderService {
   // Move single order up using backend PATCH /orders/:id/move-up
   moveOrderUp(order: OrderItem) {
     if (!order.id) return;
-    this.http.patch<any[]>(`${this.apiUrl}/orders/${order.id}/move-up`, {}).subscribe({
-      next: (res) => {
-        if (Array.isArray(res)) {
-          this.orders.set(this.mapBackendOrders(res));
-        } else {
-          this.fetchOrders();
-        }
-        this.showToast(`Order #${order.orderId} moved up!`);
+    this.http.patch<any>(`${this.apiUrl}/orders/${order.id}/move-up`, {}).subscribe({
+      next: () => {
+        this.fetchOrders();
+        this.commonSvc.showToast('success', 'Order Rank Updated', `Order #${order.orderId} moved up!`);
       },
       error: (err) => {
-        this.commonSvc.showToast('error', 'Order Rank Updated', err.error.message + '\n' + `Order #${order.orderId} Rank Updated Failed.`);
+        this.commonSvc.showToast('error', 'Order Rank Updated', (err?.error?.message || '') + '\n' + `Order #${order.orderId} Rank Updated Failed.`);
         this.fetchOrders();
       }
     });
@@ -304,17 +298,13 @@ export class OrderService {
   // Move single order down using backend PATCH /orders/:id/move-down
   moveOrderDown(order: OrderItem) {
     if (!order.id) return;
-    this.http.patch<any[]>(`${this.apiUrl}/orders/${order.id}/move-down`, {}).subscribe({
-      next: (res) => {
-        if (Array.isArray(res)) {
-          this.orders.set(this.mapBackendOrders(res));
-        } else {
-          this.fetchOrders();
-        }
+    this.http.patch<any>(`${this.apiUrl}/orders/${order.id}/move-down`, {}).subscribe({
+      next: () => {
+        this.fetchOrders();
         this.commonSvc.showToast('success', 'Order Rank Updated', `Order #${order.orderId} moved down!`);
       },
       error: (err: any) => {
-        this.commonSvc.showToast('error', 'Order Rank Updated', err.error.message + '\n' + `Order #${order.orderId} Rank Updated Failed.`);
+        this.commonSvc.showToast('error', 'Order Rank Updated', (err?.error?.message || '') + '\n' + `Order #${order.orderId} Rank Updated Failed.`);
         this.fetchOrders();
       }
     });
@@ -322,19 +312,15 @@ export class OrderService {
 
   // Update order rank using backend PATCH /orders/:id/rank
   updateOrderRank(orderId: number, newRank: number, orderNumber?: string) {
-    this.http.patch<any[]>(`${this.apiUrl}/orders/${orderId}/rank`, { newRank }).subscribe({
-      next: (res) => {
-        if (Array.isArray(res)) {
-          this.orders.set(this.mapBackendOrders(res));
-        } else {
-          this.fetchOrders();
-        }
+    this.http.patch<any>(`${this.apiUrl}/orders/${orderId}/rank`, { newRank }).subscribe({
+      next: () => {
+        this.fetchOrders();
         if (orderNumber) {
           this.commonSvc.showToast('success', 'Order Rank Updated', `Order #${orderNumber} moved to Rank #${newRank}!`);
         }
       },
       error: (err: any) => {
-        this.commonSvc.showToast('error', 'Order Rank Updated', err.error.message + '\n' + `Order #${orderId} Rank Updated Failed.`);
+        this.commonSvc.showToast('error', 'Order Rank Updated', (err?.error?.message || '') + '\n' + `Order #${orderId} Rank Updated Failed.`);
         this.fetchOrders();
       }
     });

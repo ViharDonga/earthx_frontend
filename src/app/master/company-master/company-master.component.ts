@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyService } from '../../services/company.service';
@@ -14,12 +14,12 @@ import { ProductService } from '../../services/product.service';
   templateUrl: './company-master.component.html',
   styleUrl: './company-master.component.scss'
 })
-export class CompanyMasterComponent {
+export class CompanyMasterComponent implements OnInit {
   searchQuery = signal<string>('');
   showAddCompanyModal = signal<boolean>(false);
   showViewCompanyModal = signal<boolean>(false);
   selectedCompany = signal<CompanyItem | null>(null);
-  toast = inject(CommonService)
+  toast = inject(CommonService);
 
   newCompany: Partial<CompanyItem> = {
     companyName: '',
@@ -34,8 +34,11 @@ export class CompanyMasterComponent {
   constructor(
     public companyService: CompanyService,
     private orderService: OrderService,
-
   ) { }
+
+  ngOnInit() {
+    this.companyService.fetchCompanies();
+  }
 
   get filteredCompanies(): CompanyItem[] {
     const query = this.searchQuery().trim().toLowerCase();

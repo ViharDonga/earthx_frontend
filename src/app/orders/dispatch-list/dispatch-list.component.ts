@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../services/order.service';
@@ -13,7 +13,7 @@ import { ExportService } from '../../services/export.service';
   templateUrl: './dispatch-list.component.html',
   styleUrl: './dispatch-list.component.scss'
 })
-export class DispatchListComponent {
+export class DispatchListComponent implements OnInit {
   searchQuery = signal<string>('');
   selectedCompanyFilter = signal<string>('All');
   filterDateFrom = signal<string>('');
@@ -29,6 +29,11 @@ export class DispatchListComponent {
     public exportService: ExportService
   ) {
     this.setCurrentMonthFilter();
+  }
+
+  ngOnInit() {
+    this.orderService.fetchOrders();
+    this.companyService.fetchCompanies();
   }
 
   setCurrentMonthFilter() {

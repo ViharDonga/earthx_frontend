@@ -1,0 +1,413 @@
+<div class="view-section">
+  <div class="data-table-card">
+
+    <!-- TOP TOOLBAR -->
+    <div class="table-toolbar">
+      <div class="toolbar-title-group">
+        <div class="title-with-badge">
+          <h3 class="toolbar-title">User Master Directory</h3>
+          <span class="active-count-badge">{{ filteredUsers.length }}</span>
+        </div>
+
+        <!-- Filter Quick Pills -->
+        <div class="filter-pills-row">
+          <button type="button" class="filter-pill-btn" [class.active]="selectedStatusFilter() === 'ALL'"
+            (click)="setStatusFilter('ALL')">
+            All ({{ userService.users().length }})
+          </button>
+          <button type="button" class="filter-pill-btn pending-pill" [class.active]="selectedStatusFilter() === 'PENDING'"
+            (click)="setStatusFilter('PENDING')">
+            <i class="ri-time-line"></i> Pending ({{ pendingCount }})
+          </button>
+          <button type="button" class="filter-pill-btn approved-pill" [class.active]="selectedStatusFilter() === 'APPROVED'"
+            (click)="setStatusFilter('APPROVED')">
+            <i class="ri-checkbox-circle-line"></i> Approved ({{ approvedCount }})
+          </button>
+          <button type="button" class="filter-pill-btn rejected-pill" [class.active]="selectedStatusFilter() === 'REJECTED'"
+            (click)="setStatusFilter('REJECTED')">
+            <i class="ri-close-circle-line"></i> Rejected ({{ rejectedCount }})
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-actions-grid">
+        <div class="search-box">
+          <i class="ri-search-line"></i>
+          <input type="text" placeholder="Search by name, email, phone, role..." [(ngModel)]="searchQuery" />
+        </div>
+
+        <button type="button" class="refresh-btn" (click)="userService.fetchUsers()" title="Refresh Users List">
+          <i class="ri-refresh-line" [class.spin-anim]="userService.isLoading()"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- DESKTOP TABLE -->
+    <div class="table-scroll-container desktop-table-view">
+      <table class="earthx-table exact-theme-table">
+        <thead>
+          <tr>
+            <th style="width: 70px;">#</th>
+            <th style="width: 140px; text-align: center;">Action</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th style="width: 120px;">Role</th>
+            <th style="width: 130px;">Approval Status</th>
+            <th style="width: 120px; text-align: center;">Active State</th>
+            <th style="width: 110px;">Registered</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers; let idx = index">
+            <!-- Row Index / ID -->
+            <td class="font-bold font-mono text-muted">
+              #{{ idx + 1 }}
+            </td>
+
+            <!-- ACTION COLUMN -->
+            <td class="action-cell">
+              <div class="action-btn-group">
+
+                <!-- 1. APPROVE ACTION ICON (ONLY IF STATUS IS PENDING) -->
+                <button *ngIf="(user.status || '').toLowerCase() === 'pending'" type="button"
+                  class="modern-action-btn approve-action" (click)="approveUser(user)"
+                  title="Approve User Registration">
+                  <i class="ri-checkbox-circle-fill"></i>
+                </button>
+
+                <!-- 2. REJECT ACTION ICON (ONLY IF STATUS IS PENDING) -->
+                <button *ngIf="(user.status || '').toLowerCase() === 'pending'" type="button"
+                  class="modern-action-btn reject-action" (click)="rejectUser(user)"
+                  title="Reject User Registration">
+                  <i class="ri-close-circle-fill"></i>
+                </button>
+
+                <!-- (NOTE: If status is 'rejected', NO approval icon is rendered here!) -->
+
+                <!-- 3. ACTIVE / INACTIVE TOGGLE ACTION BUTTON -->
+                <button type="button" class="modern-action-btn toggle-active-action"
+                  [class.is-active]="user.isActive"
+                  [class.is-inactive]="!user.isActive"
+                  (click)="toggleActive(user)"
+                  [title]="user.isActive ? 'Click to Deactivate User' : 'Click to Activate User'">
+                  <i [class]="user.isActive ? 'ri-toggle-fill text-green' : 'ri-toggle-line text-muted'"></i>
+                </button>
+
+                <!-- 4. EDIT USER ACTION -->
+                <button type="button" class="modern-action-btn edit-action" (click)="openEditUser(user)"
+                  title="Edit User">
+                  <i class="ri-pencil-line"></i>
+                </button>
+
+                <!-- 5. VIEW USER DETAILS -->
+                <button type="button" class="modern-action-btn view-action" (click)="viewUser(user)"
+                  title="View User Details">
+                  <i class="ri-eye-line"></i>
+                </button>
+
+              </div>
+            </td>
+
+            <!-- User Name + Avatar -->
+            <td>
+              <div class="user-cell-wrap">
+                <div class="user-avatar-initials" [class.super-user-avatar]="user.role === 'super-user' || user.role === 'admin'">
+                  {{ getUserInitials(user.name, user.email) }}
+                </div>
+                <div class="user-meta-col">
+                  <span class="user-full-name font-bold">{{ getUserDisplayName(user) }}</span>
+                  <span class="user-uuid-sub font-mono">ID: #{{ user.id ? user.id.substring(0, 8) : '-' }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Email -->
+            <td class="font-mono">{{ user.email }}</td>
+
+            <!-- Phone -->
+            <td class="font-mono text-muted">{{ user.phone || '-' }}</td>
+
+            <!-- Role Badge -->
+            <td>
+              <span class="role-badge-pill" [class.super-user]="user.role === 'super-user' || user.role === 'admin'">
+                <i class="ri-shield-user-fill" *ngIf="user.role === 'super-user' || user.role === 'admin'"></i>
+                <i class="ri-user-line" *ngIf="user.role !== 'super-user' && user.role !== 'admin'"></i>
+                {{ user.role === 'super-user' || user.role === 'admin' ? 'Super User' : 'User' }}
+              </span>
+            </td>
+
+            <!-- Status Pill (Pending / Approved / Rejected) -->
+            <td>
+              <span class="user-status-pill"
+                [class.status-pending]="(user.status || '').toLowerCase() === 'pending'"
+                [class.status-approved]="(user.status || '').toLowerCase() === 'approved'"
+                [class.status-rejected]="(user.status || '').toLowerCase() === 'rejected'">
+                <span class="status-dot"></span>
+                <span>{{ (user.status || 'Pending') | titlecase }}</span>
+              </span>
+            </td>
+
+            <!-- Active / Inactive Switch Column -->
+            <td style="text-align: center;">
+              <div class="active-toggle-wrap" (click)="toggleActive(user)" title="Click to toggle status">
+                <label class="earthx-switch">
+                  <input type="checkbox" [checked]="user.isActive" (change)="$event.stopPropagation(); toggleActive(user)" />
+                  <span class="slider round"></span>
+                </label>
+                <span class="active-label" [class.active-text]="user.isActive" [class.inactive-text]="!user.isActive">
+                  {{ user.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Created At Date -->
+            <td class="font-mono text-muted text-sm">
+              {{ formatDate(user.createdAt) }}
+            </td>
+
+          </tr>
+
+          <tr *ngIf="filteredUsers.length === 0">
+            <td colspan="9" class="empty-table-cell">
+              <div class="empty-state-box">
+                <i class="ri-team-line"></i>
+                <p>No users found matching current filters.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS VIEW -->
+    <div class="mobile-orders-cards-container">
+      <div *ngIf="filteredUsers.length === 0" class="empty-state-box">
+        <i class="ri-team-line"></i>
+        <p>No users found.</p>
+      </div>
+
+      <div *ngFor="let user of filteredUsers; let idx = index" class="order-mobile-card">
+        <div class="mobile-card-header">
+          <div class="id-date-meta">
+            <span class="card-order-id font-bold font-mono">#{{ idx + 1 }}</span>
+            <span class="user-status-pill"
+              [class.status-pending]="(user.status || '').toLowerCase() === 'pending'"
+              [class.status-approved]="(user.status || '').toLowerCase() === 'approved'"
+              [class.status-rejected]="(user.status || '').toLowerCase() === 'rejected'"
+              style="padding: 2px 8px; font-size: 11px;">
+              <span class="status-dot"></span>
+              {{ (user.status || 'Pending') | titlecase }}
+            </span>
+          </div>
+
+          <div class="action-btn-group">
+            <!-- APPROVE ICON (ONLY IF STATUS IS PENDING) -->
+            <button *ngIf="(user.status || '').toLowerCase() === 'pending'" type="button"
+              class="modern-action-btn approve-action" (click)="approveUser(user)"
+              title="Approve User">
+              <i class="ri-checkbox-circle-fill"></i>
+            </button>
+
+            <!-- REJECT ICON (ONLY IF STATUS IS PENDING) -->
+            <button *ngIf="(user.status || '').toLowerCase() === 'pending'" type="button"
+              class="modern-action-btn reject-action" (click)="rejectUser(user)"
+              title="Reject User">
+              <i class="ri-close-circle-fill"></i>
+            </button>
+
+            <!-- EDIT -->
+            <button type="button" class="modern-action-btn edit-action" (click)="openEditUser(user)"
+              title="Edit User">
+              <i class="ri-pencil-line"></i>
+            </button>
+
+            <!-- VIEW -->
+            <button type="button" class="modern-action-btn view-action" (click)="viewUser(user)"
+              title="View Details">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-card-body">
+          <h4 class="card-company-name"><i class="ri-user-3-line text-red"></i> {{ getUserDisplayName(user) }}</h4>
+          <div class="card-product-name"><i class="ri-mail-line text-muted"></i> {{ user.email }}</div>
+          <div class="card-product-name" style="font-size: 11px; margin-top: 2px;"><i class="ri-fingerprint-line text-muted"></i> ID: #{{ user.id ? user.id.substring(0, 8) : '-' }}</div>
+        </div>
+
+        <div class="mobile-card-grid">
+          <div class="card-grid-item">
+            <span class="grid-item-label">Phone</span>
+            <span class="grid-item-val font-mono">{{ user.phone || 'N/A' }}</span>
+          </div>
+          <div class="card-grid-item">
+            <span class="grid-item-label">Role</span>
+            <span class="role-badge-pill" [class.super-user]="user.role === 'super-user' || user.role === 'admin'">
+              {{ user.role === 'super-user' || user.role === 'admin' ? 'Super User' : 'User' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mobile-card-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span class="footer-lbl"><i class="ri-calendar-line"></i> Joined:</span>
+            <span class="footer-val font-mono">{{ formatDate(user.createdAt) }}</span>
+          </div>
+
+          <!-- Active Toggle on Mobile Card -->
+          <div class="active-toggle-wrap" (click)="toggleActive(user)">
+            <label class="earthx-switch">
+              <input type="checkbox" [checked]="user.isActive" (change)="$event.stopPropagation(); toggleActive(user)" />
+              <span class="slider round"></span>
+            </label>
+            <span class="active-label" [class.active-text]="user.isActive" [class.inactive-text]="!user.isActive">
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-backdrop" *ngIf="showEditUserModal() && selectedUser()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-user-settings-line text-red"></i>
+        <span>Edit User — {{ selectedUser()?.name || selectedUser()?.email }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showEditUserModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="field-label">Full Name *</label>
+        <input type="text" [(ngModel)]="editFormData.name" placeholder="Full Name" class="clean-input font-bold" />
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Email ID (Read Only)</label>
+        <input type="email" [value]="editFormData.email" disabled class="clean-input font-mono input-disabled" />
+      </div>
+
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label class="field-label">Phone Number</label>
+          <input type="text" [(ngModel)]="editFormData.phone" placeholder="e.g. +91 9876543210" class="clean-input font-mono" />
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">System Role</label>
+          <select [(ngModel)]="editFormData.role" class="clean-input clean-select">
+            <option value="user">User (Standard Access)</option>
+            <option value="super-user">Super User (Full Admin Access)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-grid-2">
+        <div class="form-field">
+          <label class="field-label">Approval Status</label>
+          <select [(ngModel)]="editFormData.status" class="clean-input clean-select">
+            <option value="pending">⏳ Pending Review</option>
+            <option value="approved">✅ Approved</option>
+            <option value="rejected">❌ Rejected</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Account Active State</label>
+          <select [(ngModel)]="editFormData.isActive" class="clean-input clean-select">
+            <option [ngValue]="true">🟢 Active (Allowed to Login)</option>
+            <option [ngValue]="false">🔴 Inactive (Disabled)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showEditUserModal.set(false)">Cancel</button>
+      <button type="button" class="top-add-btn" (click)="saveEditUser()">
+        <i class="ri-save-line"></i>
+        <span>Save Changes</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW USER DETAILS MODAL -->
+<div class="modal-backdrop" *ngIf="showViewUserModal() && selectedUser()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-user-star-line text-red"></i>
+        <span>User Details</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showViewUserModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedUser() as user">
+      <div class="details-view-grid">
+        <div class="view-item">
+          <span class="item-label">User ID (UUID)</span>
+          <span class="item-value font-mono text-muted text-xs">{{ user.id }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Active State</span>
+          <span class="item-value font-bold" [class.text-green]="user.isActive" [class.text-red]="!user.isActive">
+            {{ user.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Full Name</span>
+          <span class="item-value font-bold text-red">{{ user.name || 'Not Specified' }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Email Address</span>
+          <span class="item-value font-mono">{{ user.email }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Phone</span>
+          <span class="item-value font-mono">{{ user.phone || 'N/A' }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Role</span>
+          <span class="role-badge-pill" [class.super-user]="user.role === 'super-user' || user.role === 'admin'">
+            {{ user.role === 'super-user' || user.role === 'admin' ? 'Super User' : 'User' }}
+          </span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Approval Status</span>
+          <span class="user-status-pill"
+            [class.status-pending]="(user.status || '').toLowerCase() === 'pending'"
+            [class.status-approved]="(user.status || '').toLowerCase() === 'approved'"
+            [class.status-rejected]="(user.status || '').toLowerCase() === 'rejected'">
+            <span class="status-dot"></span>
+            <span>{{ (user.status || 'Pending') | titlecase }}</span>
+          </span>
+        </div>
+        <div class="view-item full-col">
+          <span class="item-label">Registered Date</span>
+          <span class="item-value font-mono">{{ formatDate(user.createdAt) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button *ngIf="(selectedUser()?.status || '').toLowerCase() === 'pending'" type="button"
+        class="top-add-btn approve-btn-modal" (click)="approveUser(selectedUser()!); showViewUserModal.set(false)">
+        <i class="ri-checkbox-circle-fill"></i>
+        <span>Approve User</span>
+      </button>
+      <button type="button" class="btn-cancel" (click)="showViewUserModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>

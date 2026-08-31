@@ -13,9 +13,7 @@ export class CompanyService {
   companies = signal<CompanyItem[]>([]);
   isLoading = signal<boolean>(false);
 
-  constructor(private http: HttpClient, public commonSvc: CommonService) {
-    this.fetchCompanies();
-  }
+  constructor(private http: HttpClient, public commonSvc: CommonService) {}
 
   fetchCompanies() {
     this.isLoading.set(true);

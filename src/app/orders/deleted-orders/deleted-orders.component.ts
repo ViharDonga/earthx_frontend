@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../services/order.service';
@@ -12,7 +12,7 @@ import { OrderItem } from '../../models/order.model';
   templateUrl: './deleted-orders.component.html',
   styleUrl: './deleted-orders.component.scss'
 })
-export class DeletedOrdersComponent {
+export class DeletedOrdersComponent implements OnInit {
   searchQuery = signal<string>('');
   selectedCompanyFilter = signal<string>('All');
 
@@ -24,6 +24,11 @@ export class DeletedOrdersComponent {
     public orderService: OrderService,
     public companyService: CompanyService
   ) {}
+
+  ngOnInit() {
+    this.orderService.fetchOrders();
+    this.companyService.fetchCompanies();
+  }
 
   get deletedOrders(): OrderItem[] {
     return this.orderService.orders().filter(item => {

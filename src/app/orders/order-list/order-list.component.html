@@ -355,7 +355,7 @@
       <div class="form-field">
         <label class="field-label">Order Date *</label>
         <div class="field-input-wrapper">
-          <i class="ri-calendar-line field-icon text-red" (click)="datePicker.showPicker?.()"></i>
+          <i class="ri-calendar-line field-icon text-red" (click)="datePicker.showPicker()"></i>
           <!-- [min]="minOrderDate" -->
           <input #datePicker type="date" [(ngModel)]="newOrder.date" placeholder="YYYY-MM-DD" class="clean-input" />
         </div>

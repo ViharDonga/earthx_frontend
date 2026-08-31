@@ -24,23 +24,11 @@
         <i class="ri-user-3-line" *ngIf="authService.currentUser().role === 'user'"></i>
       </div>
       <div class="user-info">
-        <span class="user-name">{{ authService.currentUser().fullName }}</span>
+        <span class="user-name">{{ authService.currentUser().fullName || authService.currentUser().username }}</span>
         <span class="user-role-badge" [class.super-user]="authService.currentUser().role === 'super-user'">
           <i class="ri-shield-fill" *ngIf="authService.currentUser().role === 'super-user'"></i>
-          {{ authService.currentUser().roleLabel }}
+          {{ authService.currentUser().role === 'super-user' ? 'Super User' : 'User' }}
         </span>
-      </div>
-
-      <!-- Quick Role Toggle -->
-      <div class="role-switcher-dropdown" title="Toggle between Super User and User">
-        <button type="button" class="role-pill-btn" [class.active]="authService.currentUser().role === 'super-user'"
-          (click)="switchRole('super-user')">
-          Super
-        </button>
-        <button type="button" class="role-pill-btn" [class.active]="authService.currentUser().role === 'user'"
-          (click)="switchRole('user')">
-          User
-        </button>
       </div>
     </div>
 
@@ -120,6 +108,17 @@
               <span>Product</span>
             </div>
           </a>
+
+          <a href="javascript:void(0)" class="submenu-link" [class.active]="activeView() === 'master-user'"
+            (click)="selectMenuItem('master-user')">
+            <div class="link-label-group">
+              <i class="ri-user-settings-line"></i>
+              <span>Users</span>
+            </div>
+            <span class="nav-counter-badge pending-user-badge" *ngIf="pendingUserCount > 0">
+              {{ pendingUserCount }}
+            </span>
+          </a>
         </div>
       </div>
     </nav>
@@ -152,6 +151,7 @@
           <span *ngIf="activeView() === 'orders-deleted'"><i class="ri-delete-bin-line text-red"></i> Deleted Orders</span>
           <span *ngIf="activeView() === 'master-company'"><i class="ri-building-2-line text-red"></i> Company Master</span>
           <span *ngIf="activeView() === 'master-product'"><i class="ri-cpu-line text-red"></i> Product Master</span>
+          <span *ngIf="activeView() === 'master-user'"><i class="ri-user-settings-line text-red"></i> User Master</span>
         </h2>
       </div>
 
@@ -218,6 +218,9 @@
 
       <!-- 5. PRODUCT MASTER COMPONENT -->
       <app-product-master *ngIf="activeView() === 'master-product'"></app-product-master>
+
+      <!-- 6. USER MASTER COMPONENT -->
+      <app-user-master *ngIf="activeView() === 'master-user'"></app-user-master>
     </main>
 
   </div>
