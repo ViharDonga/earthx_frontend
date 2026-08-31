@@ -1,57 +1,10 @@
 /* EarthX CommLink & Dashboard — Global Design Tokens & Themes */
 
-:root, [data-theme="dark"] {
+:root, [data-theme="light"] {
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Theme Core (Dark) */
-  --bg-base: #060911;
-  --bg-sidebar: rgba(10, 16, 30, 0.96);
-  --bg-surface: rgba(15, 23, 42, 0.9);
-  --bg-card: rgba(15, 23, 42, 0.85);
-  --bg-input: rgba(8, 12, 22, 0.85);
-  --bg-input-focus: rgba(14, 20, 38, 0.95);
-
-  --text-main: #f8fafc;
-  --text-sub: #94a3b8;
-  --text-muted: #64748b;
-
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.05);
-
-  /* Table Specific (Dark) */
-  --table-bg: #0f172a;
-  --table-header-bg: #080d1a;
-  --table-border: rgba(255, 255, 255, 0.07);
-  --table-row-hover: rgba(255, 30, 39, 0.08);
-  --table-text-main: #f1f5f9;
-  --table-text-sub: #cbd5e1;
-
-  /* EarthX Brand Colors */
-  --red-primary: #ff1e27;
-  --red-hover: #d8000c;
-  --red-glow: rgba(255, 30, 39, 0.3);
-  --red-tint: rgba(255, 30, 39, 0.12);
-
-  --green-status: #10b981;
-  --green-tint: rgba(16, 185, 129, 0.15);
-
-  --amber-status: #f59e0b;
-  --amber-tint: rgba(245, 158, 11, 0.15);
-
-  --blue-accent: #3b82f6;
-  --blue-tint: rgba(59, 130, 246, 0.15);
-
-  --purple-status: #c084fc;
-  --purple-tint: rgba(192, 132, 252, 0.15);
-  --purple-border: rgba(192, 132, 252, 0.35);
-
-  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
-  --glass-blur: blur(16px);
-}
-
-[data-theme="light"] {
   /* Theme Core (Light) */
   --bg-base: #f1f5f9;
   --bg-sidebar: #ffffff;
@@ -96,6 +49,53 @@
 
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
   --glass-blur: blur(8px);
+}
+
+[data-theme="dark"] {
+  /* Theme Core (Dark) */
+  --bg-base: #060911;
+  --bg-sidebar: rgba(10, 16, 30, 0.96);
+  --bg-surface: rgba(15, 23, 42, 0.9);
+  --bg-card: rgba(15, 23, 42, 0.85);
+  --bg-input: rgba(8, 12, 22, 0.85);
+  --bg-input-focus: rgba(14, 20, 38, 0.95);
+
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+  --text-muted: #64748b;
+
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Table Specific (Dark) */
+  --table-bg: #0f172a;
+  --table-header-bg: #080d1a;
+  --table-border: rgba(255, 255, 255, 0.07);
+  --table-row-hover: rgba(255, 30, 39, 0.08);
+  --table-text-main: #f1f5f9;
+  --table-text-sub: #cbd5e1;
+
+  /* EarthX Brand Colors */
+  --red-primary: #ff1e27;
+  --red-hover: #d8000c;
+  --red-glow: rgba(255, 30, 39, 0.3);
+  --red-tint: rgba(255, 30, 39, 0.12);
+
+  --green-status: #10b981;
+  --green-tint: rgba(16, 185, 129, 0.15);
+
+  --amber-status: #f59e0b;
+  --amber-tint: rgba(245, 158, 11, 0.15);
+
+  --blue-accent: #3b82f6;
+  --blue-tint: rgba(59, 130, 246, 0.15);
+
+  --purple-status: #c084fc;
+  --purple-tint: rgba(192, 132, 252, 0.15);
+  --purple-border: rgba(192, 132, 252, 0.35);
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(16px);
 }
 
 *, *::before, *::after {

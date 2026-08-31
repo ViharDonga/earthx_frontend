@@ -4,15 +4,15 @@ import { Injectable, signal, effect } from '@angular/core';
   providedIn: 'root'
 })
 export class ThemeService {
-  // 'dark' or 'light'
+  // 'light' by default, or 'dark'
   currentTheme = signal<'dark' | 'light'>('light');
 
   constructor() {
-    // Check saved local theme or system preference
+    // Check saved local theme or default to 'light'
     const saved = localStorage.getItem('earthx-theme') as 'dark' | 'light' | null;
-    if (saved) {
-      this.currentTheme.set(saved);
-    }
+    const initialTheme: 'dark' | 'light' = saved === 'dark' ? 'dark' : 'light';
+    this.currentTheme.set(initialTheme);
+    document.documentElement.setAttribute('data-theme', initialTheme);
 
     effect(() => {
       const theme = this.currentTheme();
@@ -22,7 +22,7 @@ export class ThemeService {
   }
 
   toggleTheme() {
-    this.currentTheme.update(t => (t === 'light' ? 'light' : 'dark'));
+    this.currentTheme.update(t => (t === 'light' ? 'dark' : 'light'));
   }
 
   setTheme(theme: 'dark' | 'light') {
