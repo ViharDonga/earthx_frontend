@@ -161,7 +161,7 @@ export class OrderService {
       quantity: Number(order.qty) || 100,
       priority,
       process,
-      rank: nextSr,
+      // rank: nextSr,
       notes: `Laser: ${order.laserPrint || ''}; Box: ${order.box || 'With Box'}`,
       order_status: order.order_status || 'OPEN',
       addl_attr: order.addl_attr || {}
@@ -251,6 +251,7 @@ export class OrderService {
     } else {
       nextStatusText = 'Process';
       backendProcess = 'IN_PROCESS';
+      updatedOrderStatus = 'OPEN';
       feedbackMsg = `Order #${order.orderId} reset to In Process.`;
     }
 
@@ -268,14 +269,73 @@ export class OrderService {
           this.fetchOrders();
         },
         error: (err: any) => {
-       
-          this.commonSvc.showToast('error', 'Order Status Updated', err.error.message || feedbackMsg);
+          this.commonSvc.showToast('error', 'Order Status Updated', err.error?.message || feedbackMsg);
         }
       });
     } else {
       this.orders.update(list =>
         list.map(item =>
-          item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText, addl_attr: updatedAddlAttr } : item
+          item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText, order_status: updatedOrderStatus, addl_attr: updatedAddlAttr } : item
+        )
+      );
+      this.showToast(feedbackMsg);
+    }
+  }
+
+  // Return Dispatched order back to active workflow with selected process
+  returnOrderProcess(order: OrderItem, targetProcess: 'Process' | 'Ready to Dispatch') {
+    const currentUser = this.authService.currentUser();
+    const userName = currentUser?.fullName || currentUser?.username || 'Super User';
+    const now = new Date();
+    const formatted = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+    const backendProcess = targetProcess === 'Ready to Dispatch' ? 'READY_TO_DISPATCH' : 'IN_PROCESS';
+    const nextStatusText = targetProcess;
+    const updatedOrderStatus = 'OPEN';
+    const updatedAddlAttr: any = { ...(order.addl_attr || {}) };
+
+    if (targetProcess === 'Ready to Dispatch') {
+      updatedAddlAttr.readyToDispatch = {
+        userName: userName,
+        timestamp: now.toISOString(),
+        date: formatted
+      };
+      delete updatedAddlAttr.dispatched;
+    } else {
+      updatedAddlAttr.returnedToProcess = {
+        userName: userName,
+        timestamp: now.toISOString(),
+        date: formatted
+      };
+      delete updatedAddlAttr.dispatched;
+      delete updatedAddlAttr.readyToDispatch;
+    }
+
+    const payload = {
+      process: backendProcess,
+      order_status: updatedOrderStatus,
+      addl_attr: updatedAddlAttr
+    };
+
+    const feedbackMsg = targetProcess === 'Ready to Dispatch'
+      ? `Order #${order.orderId} returned to Ready to Dispatch!`
+      : `Order #${order.orderId} returned to In Process!`;
+
+    const targetId = order.id;
+    if (targetId) {
+      this.http.patch(`${this.apiUrl}/orders/${targetId}`, payload).subscribe({
+        next: () => {
+          this.commonSvc.showToast('success', 'Process Returned', feedbackMsg);
+          this.fetchOrders();
+        },
+        error: (err: any) => {
+          this.commonSvc.showToast('error', 'Process Return Failed', err.error?.message || feedbackMsg);
+        }
+      });
+    } else {
+      this.orders.update(list =>
+        list.map(item =>
+          item.orderId === order.orderId ? { ...item, orderStatus: nextStatusText, order_status: updatedOrderStatus, addl_attr: updatedAddlAttr } : item
         )
       );
       this.showToast(feedbackMsg);

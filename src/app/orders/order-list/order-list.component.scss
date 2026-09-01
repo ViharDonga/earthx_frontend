@@ -365,6 +365,14 @@
       background: var(--red-tint);
     }
 
+    &.ready-to-dispatch-row {
+      background: rgba(16, 185, 129, 0.13) !important;
+
+      &:hover {
+        background: rgba(16, 185, 129, 0.22) !important;
+      }
+    }
+
     /* Drag & Drop Feedback States */
     &.dragging-row {
       opacity: 0.45;
@@ -630,6 +638,19 @@
       }
     }
 
+    &.return-action {
+      background: rgba(245, 158, 11, 0.14);
+      color: #d97706;
+      border-color: rgba(245, 158, 11, 0.35);
+
+      &:hover {
+        background: #d97706;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);
+      }
+    }
+
     &.view-action {
       background: rgba(148, 163, 184, 0.12);
       color: var(--text-sub);
@@ -821,6 +842,12 @@
   &.urgent-card {
     border-left: 4px solid var(--red-primary);
     background: linear-gradient(90deg, var(--red-tint) 0%, var(--bg-card) 35%);
+  }
+
+  &.ready-to-dispatch-card {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    border-left: 4px solid var(--green-status) !important;
   }
 
   .mobile-card-header {
@@ -1138,3 +1165,113 @@
 .text-amber { color: var(--amber-status); }
 .text-purple { color: var(--purple-status); }
 .uppercase { text-transform: uppercase; }
+
+/* Return Process Selector Cards in Modal */
+.process-select-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 6px 0;
+
+  @media (max-width: 540px) {
+    grid-template-columns: 1fr;
+  }
+
+  .process-card-option {
+    border: 2px solid var(--border-color);
+    background: var(--bg-input);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+
+    &:hover {
+      border-color: rgba(255, 30, 39, 0.4);
+      background: var(--bg-surface);
+      transform: translateY(-2px);
+    }
+
+    &.selected {
+      border-color: var(--red-primary);
+      background: var(--red-tint);
+      box-shadow: 0 4px 12px rgba(255, 30, 39, 0.15);
+
+      &.ready-card {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.12);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+
+        .card-opt-title {
+          color: #d97706;
+        }
+
+        .check-badge {
+          background: #d97706;
+          border-color: #d97706;
+          color: #ffffff;
+        }
+      }
+
+      &.process-card {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.12);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+
+        .card-opt-title {
+          color: #2563eb;
+        }
+
+        .check-badge {
+          background: #2563eb;
+          border-color: #2563eb;
+          color: #ffffff;
+        }
+      }
+    }
+
+    .card-opt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .opt-icon-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        i {
+          font-size: 20px;
+        }
+      }
+
+      .card-opt-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      .check-badge {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: transparent;
+      }
+    }
+
+    .card-opt-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin: 0;
+    }
+  }
+}

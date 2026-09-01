@@ -23,6 +23,11 @@ export class DispatchListComponent {
   showViewOrderModal = signal<boolean>(false);
   selectedOrder = signal<OrderItem | null>(null);
 
+  // Return Process Modal state
+  showReturnModal = signal<boolean>(false);
+  selectedOrderForReturn = signal<OrderItem | null>(null);
+  returnProcessType = signal<'Process' | 'Ready to Dispatch'>('Process');
+
   constructor(
     public orderService: OrderService,
     public companyService: CompanyService,
@@ -96,6 +101,21 @@ export class DispatchListComponent {
 
   quickProcessOrder(order: OrderItem) {
     this.orderService.quickProcessOrder(order);
+  }
+
+  openReturnModal(order: OrderItem) {
+    this.selectedOrderForReturn.set(order);
+    this.returnProcessType.set('Process');
+    this.showReturnModal.set(true);
+  }
+
+  confirmReturnProcess() {
+    const order = this.selectedOrderForReturn();
+    if (order) {
+      this.orderService.returnOrderProcess(order, this.returnProcessType());
+      this.showReturnModal.set(false);
+      this.selectedOrderForReturn.set(null);
+    }
   }
 
   viewOrder(order: OrderItem) {

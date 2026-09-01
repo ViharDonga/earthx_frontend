@@ -81,6 +81,10 @@
 
             <td class="action-cell">
               <div class="action-btn-group">
+                <button type="button" class="modern-action-btn return-action" (click)="openReturnModal(row)"
+                  title="Return to Process / Ready to Dispatch">
+                  <i class="ri-arrow-go-back-line"></i>
+                </button>
                 <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)"
                   title="View Details">
                   <i class="ri-eye-line"></i>
@@ -147,6 +151,10 @@
             <span class="card-date-badge"><i class="ri-calendar-line"></i> {{ row.date }}</span>
           </div>
           <div class="action-btn-group">
+            <button type="button" class="modern-action-btn return-action" (click)="openReturnModal(row)"
+              title="Return to Process / Ready to Dispatch">
+              <i class="ri-arrow-go-back-line"></i>
+            </button>
             <button type="button" class="modern-action-btn view-action" (click)="viewOrder(row)" title="View">
               <i class="ri-eye-line"></i>
             </button>
@@ -241,25 +249,100 @@
             </span>
           </span>
         </div>
-        <!-- <div class="view-item full-col" *ngIf="ord.addl_attr?.readyToDispatch">
-          <span class="item-label">Ready To Dispatch Audit</span>
-          <span class="item-value font-mono">
-            <i class="ri-truck-line text-amber"></i> {{ ord.addl_attr.readyToDispatch.userName }} on {{
-            ord.addl_attr.readyToDispatch.date }}
-          </span>
-        </div>
-        <div class="view-item full-col" *ngIf="ord.addl_attr?.dispatched">
-          <span class="item-label">Dispatch Audit</span>
-          <span class="item-value font-mono">
-            <i class="ri-send-plane-fill text-green"></i> {{ ord.addl_attr.dispatched.userName }} on {{
-            ord.addl_attr.dispatched.date }}
-          </span>
-        </div> -->
       </div>
     </div>
 
     <div class="modal-footer">
       <button type="button" class="top-add-btn" (click)="showViewOrderModal.set(false)">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- RETURN PROCESS MODAL -->
+<div class="modal-backdrop" *ngIf="showReturnModal() && selectedOrderForReturn()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <i class="ri-arrow-go-back-line text-amber"></i>
+        <span>Return Order Process — #{{ selectedOrderForReturn()?.orderId }}</span>
+      </h3>
+      <button type="button" class="modal-close" (click)="showReturnModal.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedOrderForReturn() as ord">
+      <!-- Order Summary Card -->
+      <div class="details-view-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 4px;">
+        <div class="view-item">
+          <span class="item-label">Company Name</span>
+          <span class="item-value font-bold text-red">{{ ord.companyName }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Product Model</span>
+          <span class="item-value font-bold">{{ ord.productName }}</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Quantity</span>
+          <span class="item-value font-bold">{{ ord.qty | number }} pcs</span>
+        </div>
+        <div class="view-item">
+          <span class="item-label">Current State</span>
+          <span class="item-value">
+            <span class="order-status-pill dispatched">
+              <span class="status-dot"></span>
+              <span>CLOSE</span>
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main); margin-top: 4px;">
+        Select target process to return this order to:
+      </div>
+
+      <!-- Process Selection Cards -->
+      <div class="process-select-cards">
+        <!-- 1. Process -->
+        <div class="process-card-option process-card"
+          [class.selected]="returnProcessType() === 'Process'"
+          (click)="returnProcessType.set('Process')">
+          <div class="card-opt-header">
+            <div class="opt-icon-title">
+              <i class="ri-progress-3-line text-blue"></i>
+              <span class="card-opt-title">In Process</span>
+            </div>
+            <div class="check-badge">
+              <i class="ri-check-line" *ngIf="returnProcessType() === 'Process'"></i>
+            </div>
+          </div>
+          <p class="card-opt-desc">Return order to the active Orders Progress queue in In Process state.</p>
+        </div>
+
+        <!-- 2. Ready to Dispatch -->
+        <div class="process-card-option ready-card"
+          [class.selected]="returnProcessType() === 'Ready to Dispatch'"
+          (click)="returnProcessType.set('Ready to Dispatch')">
+          <div class="card-opt-header">
+            <div class="opt-icon-title">
+              <i class="ri-truck-line text-amber"></i>
+              <span class="card-opt-title">Ready to Dispatch</span>
+            </div>
+            <div class="check-badge">
+              <i class="ri-check-line" *ngIf="returnProcessType() === 'Ready to Dispatch'"></i>
+            </div>
+          </div>
+          <p class="card-opt-desc">Return order to active Orders Progress queue marked Ready to Dispatch.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="showReturnModal.set(false)">Cancel</button>
+      <button type="button" class="top-add-btn" (click)="confirmReturnProcess()">
+        <i class="ri-check-line"></i>
+        <span>Confirm Return</span>
+      </button>
     </div>
   </div>
 </div>
